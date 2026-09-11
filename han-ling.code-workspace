@@ -1,0 +1,23 @@
+{
+  "folders": [
+    {
+      "name": "💼 Root (Общий)",
+      "path": "."
+    },
+    {
+      "name": "🤖 AI Service",
+      "path": "ai_service"
+    },
+    {
+      "name": "🔐 Auth Service",
+      "path": "auth_service"
+    },
+    {
+      "name": "🗒 Content Service",
+      "path": "content_service"
+    }
+  ],
+  "settings": {
+    "python.terminal.activateEnvironment": true
+  }
+}
