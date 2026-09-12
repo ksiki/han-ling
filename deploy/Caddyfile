@@ -1,0 +1,41 @@
+# Глобальные параметры веб-сервера
+{
+    admin off
+    # email admin@ваша-компания.com # Включить на проде для Let's Encrypt
+}
+
+(security) {
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        -Server
+    }
+}
+
+hanling.local {
+    import security
+    encode zstd gzip
+
+    log {
+        output stdout
+        format json
+    }
+
+    handle /auth/* {
+        reverse_proxy auth_service:8000 {
+            health_timeout 5s
+        }
+    }
+
+    handle /content/* {
+        reverse_proxy content_service:8000 {
+            health_timeout 5s
+        }
+    }
+
+    handle {
+        respond "HanLing API Gateway is running." 200
+    }
+}
