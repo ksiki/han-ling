@@ -847,7 +847,7 @@ optional = false
 python-versions = ">=3.12,<3.13"
 groups = ["main"]
 files = []
-develop = false
+develop = true
 
 [package.source]
 type = "directory"
@@ -899,4 +899,4 @@ typing-extensions = ">=4.15.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.13"
-content-hash = "348a971b991b9d7a0da781f741dc82aea1725b05025d16f4dcd080716c876b9a"
+content-hash = "e6d9b2881766b74e985bf4271d91e5f02f5dda8ebacd7ab17087d054537cefb3"

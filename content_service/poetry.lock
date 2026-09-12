@@ -1198,7 +1198,7 @@ optional = false
 python-versions = ">=3.12,<3.13"
 groups = ["main"]
 files = []
-develop = false
+develop = true
 
 [package.source]
 type = "directory"
@@ -1363,4 +1363,4 @@ standard = ["httptools (>=0.8.0)", "python-dotenv (>=0.13)", "pyyaml (>=5.1)", "
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.13"
-content-hash = "46a31dd1a67a2655d8e813162ad726a32949908e56980a6a0a04ae3026af3334"
+content-hash = "9d3ef4a07e719b5f6eb3c56c1b14bcbb74f8663b9201a981f7d87eb5d8eee3c6"

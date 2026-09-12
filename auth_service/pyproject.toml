@@ -16,13 +16,16 @@ dependencies = [
     "pydantic-settings (>=2.15.0,<3.0.0)",
     "passlib[bcrypt] (>=1.7.4,<2.0.0)",
     "pyjwt (>=2.14.0,<3.0.0)",
-    "shared @ file:///home/ksiki/dev/han-ling/shared"
+    "shared @ file:../shared",
+    "redis (>=8.1.0,<9.0.0)",
+    "uuid6 (>=2025.0.1,<2026.0.0)",
 ]
 
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.1.1"
@@ -31,3 +34,10 @@ ruff = "^0.16.7"
 mypy = "^2.3.1"
 httpx = "^0.28.1"
 
+
+[tool.poetry.dependencies]
+shared = {develop = true}
+
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends"]

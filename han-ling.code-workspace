@@ -1,8 +1,12 @@
 {
   "folders": [
     {
-      "name": "💼 Root (Общий)",
+      "name": "📂 Root",
       "path": "."
+    },
+        {
+      "name": "🔗 Shared",
+      "path": "shared"
     },
     {
       "name": "🤖 AI Service",
@@ -18,6 +22,7 @@
     }
   ],
   "settings": {
-    "python.terminal.activateEnvironment": true
+    "python.terminal.activateEnvironment": true,
+    "python.analysis.extraPaths": ["./shared"] 
   }
 }
