@@ -1,67 +1,90 @@
-from datetime import UTC, datetime, timedelta
-from typing import Any, Final
+import datetime
+import uuid
+from dataclasses import dataclass
+from typing import Any
 
+import bcrypt
 import jwt
-from passlib.context import CryptContext
+from shared.security import verify_token
 
 from src.core.settings import config
 
 
+@dataclass
+class TokenPairDTO:
+    access_token: str
+    refresh_token: str
+    refresh_jti: str
+    refresh_expires_at: datetime.datetime
+
+
 class SecurityService:
-    PWD_CONTEXT: Final[CryptContext] = CryptContext(
-        schemes=["bcrypt"],
-        deprecated="auto",
-    )
+    def get_password_hash(self, password: str) -> str:
+        """Хеширует переданный пароль с использованием bcrypt и соли.
 
-    @classmethod
-    def get_password_hash(cls, password: str) -> str:
-        """
-        Метод для хеширования пароля
+        Args:
+            password (str): Строка с паролем, который необходимо захешировать.
 
-        Принимает:
-            - пароль для хеширования: str
-
-        Возвращает:
-            - хеш пароля: str
+        Returns:
+            str: Захешированный пароль.
         """
 
-        return cls.PWD_CONTEXT.hash(
-            secret=password,
+        pwd_bytes = password.encode("utf-8")
+        salt = bcrypt.gensalt()
+
+        return bcrypt.hashpw(
+            password=pwd_bytes,
+            salt=salt,
+        ).decode("utf-8")
+
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        """Верифицирует пароль путем сравнения исходной строки с хешем.
+
+        Args:
+            plain_password (str): Пароль в открытом виде для проверки.
+            hashed_password (str): Действительный хеш пароля, с которым идет сравнение.
+
+        Returns:
+            bool: True, если пароль совпадает с хешем, иначе False.
+        """
+
+        return bcrypt.checkpw(
+            password=plain_password.encode("utf-8"),
+            hashed_password=hashed_password.encode("utf-8"),
         )
 
-    @classmethod
-    def verify_password(cls, plain_password: str, hashed_password: str) -> bool:
-        """
-        Метод верификации пароля
+    def verify_token(self, token: str, expected_type: str) -> dict[str, Any]:
+        """Верифицирует JWT токен и проверяет его соответствие ожидаемому типу.
 
-        Принимает:
-            - пароль который нужно верифицировать: str
-            - хеш настоящего пароля: str
+        Args:
+            token (str): JWT токен для проверки.
+            expected_type (str): Ожидаемый тип токена (например, "access" или "refresh").
 
-        Возвращает:
-            - да/нет: bool
+        Returns:
+            dict[str, Any]: Полезная нагрузка (payload) извлеченная из токена.
         """
 
-        return cls.PWD_CONTEXT.verify(
-            secret=plain_password,
-            hash=hashed_password,
+        return verify_token(
+            token=token,
+            secret_key=config.SECRET_KEY,
+            algorithm=config.ALGORITHM,
+            expected_type=expected_type,
         )
 
-    @classmethod
-    def create_access_token(cls, data: dict[str, Any]) -> str:
-        """
-        Генерация access token
+    def create_access_token(self, data: dict[str, Any]) -> str:
+        """Генерирует access токен.
 
-        Принимает:
-            - данные, которые нужно вшить в token: dictp[str, Any]
+        Args:
+            data (dict[str, Any]): Данные, которые будут включены в payload токена.
 
-        Возвращает:
-            - token с вшитыми данными из data[str, Any] + время действия и тип токена: str
+        Returns:
+            str: Сгенерированный JWT access токен с вшитыми данными, типом "access"
+            и датой истечения срока действия.
         """
 
         to_encode = data.copy()
 
-        expire = datetime.now(UTC) + timedelta(
+        expire = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
             minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES
         )
         to_encode.update(
@@ -77,21 +100,22 @@ class SecurityService:
             algorithm=config.ALGORITHM,
         )
 
-    @classmethod
-    def create_refresh_token(cls, data: dict[str, Any]) -> str:
-        """
-        Генерация refresh token
+    def create_refresh_token(self, data: dict[str, Any]) -> str:
+        """Генерирует refresh токен.
 
-        Принимает:
-            - данные, которые нужно вшить в token: dict[str, Any]
+        Args:
+            data (dict[str, Any]): Данные, которые будут включены в payload токена.
 
-        Возвращает:
-            - token с вшитыми данными из data[str, Any] + время действия и тип токена: str
+        Returns:
+            str: Сгенерированный JWT refresh токен с вшитыми данными, типом "refresh"
+            и датой истечения срока действия.
         """
 
         to_encode = data.copy()
 
-        expire = datetime.now(UTC) + timedelta(days=config.REFRESH_TOKEN_EXPIRE_DAYS)
+        expire = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
+            days=config.REFRESH_TOKEN_EXPIRE_DAYS
+        )
         to_encode.update(
             {
                 "exp": expire,
@@ -105,18 +129,32 @@ class SecurityService:
             algorithm=config.ALGORITHM,
         )
 
-    @classmethod
-    def create_pair_tokens(cls, data: dict[str, Any]) -> tuple[str]:
-        """
-        Генерация пары access и refresh токенов
+    def create_pair_tokens(self, data: dict[str, Any]) -> TokenPairDTO:
+        """Генерирует пару из access и refresh токенов.
 
-        Принимает:
-            - данные, которые нужно вшить в token: dict[str, Any]
+        Args:
+            data (dict[str, Any]): Базовые данные, которые будут зашиты в оба токена.
 
-        Возвращает:
-            - кортеж из access и refresh токенов: tuple[str]
+        Returns:
+            TokenPairDTO: Объект передачи данных, содержащий access токен,
+            refresh токен, уникальный идентификатор (jti) refresh токена
+            и точную дату его истечения.
         """
+        refresh_jti = str(uuid.uuid4())
+        refresh_payload = data.copy()
+        refresh_payload.update({"jti": refresh_jti})
 
         access_token = SecurityService.create_access_token(data=data)
-        refresh_token = SecurityService.create_refresh_token(data=data)
-        return access_token, refresh_token
+        refresh_token = SecurityService.create_refresh_token(data=refresh_payload)
+
+        now = datetime.datetime.now(datetime.UTC)
+        refresh_expires_at = now + datetime.timedelta(
+            days=config.REFRESH_TOKEN_EXPIRE_DAYS
+        )
+
+        return TokenPairDTO(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            refresh_jti=refresh_jti,
+            refresh_expires_at=refresh_expires_at,
+        )
