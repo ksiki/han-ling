@@ -1,10 +1,10 @@
-from .repository import RepositoryAbstract
-from .token_blacklist_protocol import BlacklistedTokenMeta, ITokenBlacklistService
-from .unit_of_work import UnitOfWorkAbstract
+from .redis_service_abstract import RedisServiceAbstract
+from .repository_abstract import RepositoryAbstract, T
+from .unit_of_work_abstract import UnitOfWorkAbstract
 
 __all__ = [
-    "BlacklistedTokenMeta",
-    "ITokenBlacklistService",
+    "RedisServiceAbstract",
     "RepositoryAbstract",
+    "T",
     "UnitOfWorkAbstract",
 ]
