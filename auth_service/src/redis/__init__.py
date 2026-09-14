@@ -1,5 +1,6 @@
-from .token_service import TokenBlacklistService
+from .otp_service import OTPService, OTPTypeEnum
 
 __all__ = [
-    "TokenBlacklistService",
+    "OTPService",
+    "OTPTypeEnum",
 ]

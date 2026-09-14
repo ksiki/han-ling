@@ -22,6 +22,6 @@ async def close_redis() -> None:
 
 
 def get_redis_client() -> Redis:
-    if pool in None:
+    if pool is None:
         raise RedisPoolNotInitializedException
     return pool
