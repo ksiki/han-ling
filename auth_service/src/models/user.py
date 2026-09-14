@@ -1,8 +1,17 @@
+import datetime
+import enum
+
 from shared.db.types import uuid_pk
-from sqlalchemy import String
+from sqlalchemy import DateTime, String
+from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base_orm import BaseORM
+from src.models.base_orm import BaseORM
+
+
+class RoleEnum(enum.Enum):
+    USER = "USER"
+    ADMIN = "ADMIN"
 
 
 class UserORM(BaseORM):
@@ -11,4 +20,25 @@ class UserORM(BaseORM):
     id: Mapped[uuid_pk]
 
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    password_hash: Mapped[str] = mapped_column(String(length=255))
+    password_hash: Mapped[str] = mapped_column(String(length=255), nullable=True)
+
+    role: Mapped[RoleEnum] = mapped_column(
+        ENUM(
+            RoleEnum,
+            name="roleenum",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
+        server_default=RoleEnum.USER.value,
+        default=RoleEnum.USER,
+    )
+
+    is_active: Mapped[bool] = mapped_column(server_default="true", default=True)
+
+    is_deleted: Mapped[bool] = mapped_column(server_default="false", default=False)
+    deleted_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, server_default=None, default=None
+    )
+
+    @property
+    def is_valid(self) -> bool:
+        return self.is_active and not self.is_deleted
