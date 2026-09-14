@@ -9,7 +9,7 @@ root_path = dirname(dirname(dirname(abspath(__file__))))
 sys.path.insert(0, root_path)
 
 from src.core.settings import config as app_config
-from src.models import BaseORM, UserORM  # noqa
+from src.models import BaseORM, UserORM, UserProviderORM, UserSessionORM  # noqa
 
 config = context.config
 
@@ -65,6 +65,8 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             compare_server_default=True,
+            compare_type=True,
+            add_enum_values=True,
         )
 
         with context.begin_transaction():
