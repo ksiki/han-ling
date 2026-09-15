@@ -89,3 +89,12 @@ class OTPInvalidException(AppBaseException):
 
     message = "OTP invalid"
     status_code: int = 400
+
+
+class OTPAttemptsExceededException(AppBaseException):
+    """
+    Выбрасывается при достижении попыток ввода OTP
+    """
+
+    message = "OTP attempts exceeded"
+    status_code: int = 400

@@ -8,7 +8,11 @@ from typing import Any
 from redis.exceptions import RedisError
 from shared.interfaces import RedisServiceAbstract
 
-from src.core.exceptions import FailedCreateOTPException, OTPInvalidException
+from src.core.exceptions import (
+    FailedCreateOTPException,
+    OTPAttemptsExceededException,
+    OTPInvalidException,
+)
 from src.core.security import get_password_hash
 from src.core.settings import config
 
@@ -55,15 +59,14 @@ class OTPService(RedisServiceAbstract):
         payload["attempts"] = 0
 
         try:
-
-            async def _redis_operations() -> None:
-                await self.redis.setex(
+            await asyncio.wait_for(
+                await self.redis.set(
                     name=key,
-                    time=config.OTP_EXPIRE_MINUTES * 60,
                     value=json.dumps(payload),
-                )
-
-            await asyncio.wait_for(_redis_operations(), timeout=0.2)
+                    ex=config.OTP_EXPIRE_MINUTES * 60,
+                ),
+                timeout=0.2,
+            )
             return otp
 
         except (TimeoutError, RedisError) as e:
@@ -95,20 +98,22 @@ class OTPService(RedisServiceAbstract):
     async def _verify_otp(
         self, email: str, otp: str, type: OTPTypeEnum
     ) -> dict[str, Any]:
-        """Извлекает данные из Redis и производит базовую валидацию переданного OTP.
+        """Извлекает данные из Redis и выполняет валидацию переданного OTP с подсчетом попыток.
 
-        В случае успешной проверки удаляет ключ из кэша для предотвращения повторного использования кода.
+        В случае несовпадения кода увеличивает счетчик попыток или удаляет ключ при превышении лимита.
+        При успешной проверке удаляет запись из кэша для предотвращения повторного использования.
 
         Args:
             email: Email адрес пользователя.
-            otp: Одноразовый пароль для валидации.
-            type: Тип операции.
+            otp: Одноразовый проверочный код для валидации.
+            type: Тип выполняемой операции (регистрация или сброс пароля).
 
         Returns:
-            dict[str, Any]: Извлеченные данные из Redis.
+            dict[str, Any]: Десериализованные данные сессии из Redis.
 
         Raises:
-            OTPInvalidException: Если ключ не найден, код не совпадает или произошла ошибка чтения кэша.
+            OTPAttemptsExceededException: Если превышено максимальное количество попыток ввода кода.
+            OTPInvalidException: Если код неверен, ключ не найден, истек TTL или произошла ошибка Redis/десериализации.
         """
         key = self._make_key(type=type, email=email)
 
@@ -116,6 +121,25 @@ class OTPService(RedisServiceAbstract):
             payload = await self._get_payload(key=key)
 
             if payload.get("otp") != otp:
+                current_attempts = payload.get("attempts", 0) + 1
+                payload["attempts"] = current_attempts
+
+                if current_attempts >= config.MAX_OTP_ATTEMPTS:
+                    await asyncio.wait_for(
+                        self.redis.delete(key),
+                        timeout=0.1,
+                    )
+                    raise OTPAttemptsExceededException
+
+                ttl = await asyncio.wait_for(
+                    self.redis.ttl(key),
+                    timeout=0.1,
+                )
+                if ttl > 0:
+                    await asyncio.wait_for(
+                        self.redis.set(key, json.dumps(payload), ex=ttl),
+                        timeout=0.1,
+                    )
                 raise OTPInvalidException
 
             await asyncio.wait_for(

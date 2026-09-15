@@ -26,7 +26,7 @@ class Config(BaseConfig):
     # ---------------------------------------------
     # Капча
     # ---------------------------------------------
-    CLOUDFLARE_SECRET_KEY: str
+    CLOUDFLARE_SECRET_KEY: str = "1x0000000000000000000000000000000AA"
     CLOUDFLARE_VERIFY_URL: str = (
         "https://challenges.cloudflare.com/turnstile/v0/siteverify"
     )
@@ -40,6 +40,7 @@ class Config(BaseConfig):
     # OTP
     # ---------------------------------------------
     OTP_EXPIRE_MINUTES: int = 15
+    MAX_OTP_ATTEMPTS: int = 5
 
 
 config: Final[Config] = Config()
