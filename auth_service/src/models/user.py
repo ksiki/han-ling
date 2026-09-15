@@ -41,4 +41,9 @@ class UserORM(BaseORM):
 
     @property
     def is_valid(self) -> bool:
+        """Проверяет, активна ли учетная запись и не помечена ли она как удаленная.
+
+        Returns:
+            bool: True, если пользователь активен и не удален, иначе False.
+        """
         return self.is_active and not self.is_deleted

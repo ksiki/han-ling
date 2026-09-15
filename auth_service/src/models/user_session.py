@@ -36,6 +36,12 @@ class UserSessionORM(BaseORM):
     )
 
     def revoke(self, reason: str, revoked_at: datetime.datetime | None = None) -> None:
+        """Озывает текущую сессию с указанием причины и времени отзыва.
+
+        Args:
+            reason: Причина аннулирования сессии.
+            revoked_at: Время отзыва сессии (по умолчанию текущее время в UTC).
+        """
         self.is_revoked = True
         self.revoked_reason = reason
         self.revoked_at = (
@@ -44,6 +50,11 @@ class UserSessionORM(BaseORM):
 
     @property
     def is_active(self) -> bool:
+        """Проверяет активность сессии по статусу отзыва и сроку действия.
+
+        Returns:
+            bool: True, если сессия не отозвана и срок ее действия не истек, иначе False.
+        """
         return not self.is_revoked and self.expires_at > datetime.datetime.now(
             datetime.UTC
         )
