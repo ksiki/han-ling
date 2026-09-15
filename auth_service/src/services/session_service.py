@@ -3,6 +3,7 @@ import uuid
 
 import jwt
 
+from src.core.exceptions import UserBannedOrDeletedException, UserNotFoundException
 from src.core.settings import config
 from src.db import UnitOfWork
 from src.models import UserORM, UserSessionORM
@@ -74,6 +75,21 @@ class SessionService:
         )
         return token
 
+    async def _check_user(self, user: UserORM | None) -> None:
+        """Проверяет существование и валидность пользователя.
+
+        Args:
+            user: Экземпляр пользователя или None.
+
+        Raises:
+            UserNotFoundException: Если пользователь не найден (передан None).
+            UserBannedOrDeletedException: Если пользователь деактивирован или помечен как удаленный.
+        """
+        if not user:
+            raise UserNotFoundException
+        if not user.is_valid:
+            raise UserBannedOrDeletedException
+
     async def create_session(
         self, user: UserORM, ip: str, user_agent: str
     ) -> tuple[str, str]:
@@ -90,6 +106,7 @@ class SessionService:
         Raises:
             UserNotFoundException: Если пользователь с указанным идентификатором не найден.
         """
+        await self._check_user(user=user)
 
         active_sessions = await self._uow.user_session.all_active_sessions(
             user_id=user.id
@@ -115,6 +132,6 @@ class SessionService:
         session = await self._uow.user_session.add(new_session)
 
         access_token = self._create_access_token(
-            user_id=user.id, session_id=session.id, user_role=user.role
+            user_id=user.id, session_id=session.id, user_role=user.role.value
         )
         return access_token, refresh_token
