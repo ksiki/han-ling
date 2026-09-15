@@ -1,7 +1,5 @@
-# Глобальные параметры веб-сервера
 {
     admin off
-    # email admin@ваша-компания.com # Включить на проде для Let's Encrypt
 }
 
 (security) {
@@ -25,12 +23,6 @@ hanling.local {
 
     handle /auth/* {
         reverse_proxy auth_service:8000 {
-            health_timeout 5s
-        }
-    }
-
-    handle /content/* {
-        reverse_proxy content_service:8000 {
             health_timeout 5s
         }
     }
