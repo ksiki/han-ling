@@ -11,7 +11,7 @@ from src.core.security import verify_token
 from src.db import UnitOfWork, async_session_maker
 from src.models import UserORM
 from src.redis.client import get_redis_client
-from src.use_cases import RegistrationCases
+from src.use_cases import PasswordResetCaces, RegistrationCases
 
 access_token_cookie_schema = APIKeyCookie(name="access_token", auto_error=False)
 refresh_token_cookie_schema = APIKeyCookie(name="refresh_token", auto_error=False)
@@ -79,6 +79,22 @@ def get_registration_cases(
         RegistrationCases: Инициализированный сценарий Use Case для регистрации.
     """
     return RegistrationCases(uow=uow, redis_client=redis_client)
+
+
+def get_password_recovery_cases(
+    uow: UnitOfWork = Depends(_get_uow),
+    redis_client: Redis = Depends(_get_redis_client),
+) -> PasswordResetCaces:
+    """Создает и возвращает экземпляр сценариев восстановления доступа PasswordResetCaces.
+
+    Args:
+        uow: Экземпляр Unit of Work для управления транзакциями.
+        redis_client: Асинхронный клиент Redis для работы с временными состояниями.
+
+    Returns:
+        PasswordResetCaces: Инициализированный сценарий Use Case для восстановления доступа.
+    """
+    return PasswordResetCaces(uow=uow, redis_client=redis_client)
 
 
 async def verify_access_token(
