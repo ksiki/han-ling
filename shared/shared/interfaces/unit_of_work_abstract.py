@@ -38,3 +38,12 @@ class UnitOfWorkAbstract(ABC):
             NotImplementedError: Если метод не реализован в подклассе.
         """
         raise NotImplementedError
+
+    @abstractmethod
+    async def flush(self) -> None:
+        """Сбрасывает накопившиеся изменения сессии в базу данных без фиксации транзакции.
+
+        Raises:
+            NotImplementedError: Если метод не реализован в подклассе.
+        """
+        raise NotImplementedError

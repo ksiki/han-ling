@@ -59,3 +59,7 @@ class UnitOfWork(UnitOfWorkAbstract):
     async def rollback(self) -> None:
         """Откатывает все изменения текущей сессии базы данных."""
         await self._session.rollback()
+
+    async def flush(self) -> None:
+        """Сбрасывает накопившиеся изменения сессии в базу данных без фиксации транзакции."""
+        await self._session.flush()
