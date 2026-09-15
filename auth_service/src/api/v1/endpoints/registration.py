@@ -5,15 +5,14 @@ from src.api.dependencies import (
 )
 from src.background_tasks.email import send_otp_email
 from src.core.settings import config
-from src.schemas.common import SuccessResponse
+from src.schemas.common import ResendOTPRequest, SuccessResponse
 from src.schemas.register import (
     RegisterSendOTPRequest,
-    ResendOTPRequest,
     VerifyOTPRequest,
 )
 from src.use_cases import RegistrationCases
 
-router = APIRouter(prefix="/register", tags="Registration v1")
+router = APIRouter(prefix="/register", tags=["Registration v1"])
 
 
 @router.post(
@@ -93,7 +92,7 @@ async def verify(
     )
     user_agent = request.headers.get("User-Agent", "Unknown")
 
-    access_token, refresh_token = await registration_cases.verify(
+    access_token, refresh_token = await registration_cases.finish_registration(
         email=payload.email, otp=payload.otp, ip=ip, user_agent=user_agent
     )
     response.set_cookie(

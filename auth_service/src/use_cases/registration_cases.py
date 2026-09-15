@@ -61,7 +61,7 @@ class RegistrationCases:
         otp = await self._otp_service.update_state(email=email, type=OTPTypeEnum.REG)
         return otp
 
-    async def verify(
+    async def finish_registration(
         self, email: str, otp: str, ip: str, user_agent: str
     ) -> tuple[str, str]:
         """Завершает регистрацию, создавая пользователя и открывая новую сессию.
@@ -85,6 +85,7 @@ class RegistrationCases:
         user = await self._registration_service.create_user(
             email=email, password_hash=password_hash
         )
+        await self._uow.flush()
         tokens = await self._session_service.create_session(
             user=user, ip=ip, user_agent=user_agent
         )
