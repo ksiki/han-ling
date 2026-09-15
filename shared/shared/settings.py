@@ -21,6 +21,13 @@ class BaseConfig(BaseSettings):
     ALGORITHM: str = "HS256"
 
     # ---------------------------------------------
+    # Mailhog
+    # ---------------------------------------------
+    SMTP_HOST: str = "mailhog"
+    SMTP_PORT: int = 1025
+    SENDER_EMAIL: str = "noreply@yourdomain.com"
+
+    # ---------------------------------------------
     # Базовые переменные для подключения
     # ---------------------------------------------
     POSTGRES_USER: str
@@ -30,7 +37,7 @@ class BaseConfig(BaseSettings):
     POSTGRES_PORT: str = "5432"
     POSTGRES_DRIVER: str = "asyncpg"
 
-    REDIS_HOST: str = "127.0.0.1"
+    REDIS_HOST: str = "redis"
     REDIS_PORT: str = "6379"
     REDIS_DB: str = "0"
 

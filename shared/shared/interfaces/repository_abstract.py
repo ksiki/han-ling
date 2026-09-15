@@ -21,21 +21,6 @@ class RepositoryAbstract(ABC, Generic[T]):
         raise NotImplementedError
 
     @abstractmethod
-    async def get(self, id: Any) -> T | None:
-        """Получает сущность по её уникальному идентификатору.
-
-        Args:
-            id: Уникальный идентификатор сущности.
-
-        Returns:
-            T | None: Найденная сущность или None, если запись отсутствует.
-
-        Raises:
-            NotImplementedError: Если метод не реализован в подклассе.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     async def get_or_none(self, **kwargs: Any) -> T | None:
         """Получает одну сущность по заданным критериям фильтрации.
 
