@@ -1,0 +1,54 @@
+{
+    "folders": [
+        {
+            "name": "📁 Root",
+            "path": "."
+        },
+        {
+            "name": "🔗 Shared",
+            "path": "shared"
+        },
+        {
+            "name": "🔐 Auth Service",
+            "path": "auth_service"
+        },
+        {
+            "name": "🤖 AI Service",
+            "path": "ai_service"
+        },
+        {
+            "name": "🗒️ Content Service",
+            "path": "content_service"
+        },
+        {
+            "name": "📈 Analytics Service",
+            "path": "analytics_service"
+        },
+        {
+            "name": "💳 Billing Service",
+            "path": "billing_service"
+        },
+        {
+            "name": "🚀 Deploy",
+            "path": "deploy"
+        }
+    ],
+    "settings": {
+        "python.terminal.activateEnvironment": true,
+        "python.analysis.extraPaths": [
+            "./shared"
+        ],
+        "files.exclude": {
+            "**/.git": true,
+            "**/__pycache__": true,
+            "**/.pytest_cache": true,
+            "**/.ruff_cache": true,
+            "**/.DS_Store": true
+        },
+        "search.exclude": {
+            "**/.venv": true,
+            "**/venv": true,
+            "**/env": true
+        }
+    }
+}
