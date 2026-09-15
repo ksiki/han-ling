@@ -48,6 +48,26 @@ services:
     networks:
       - hanling_network
 
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:1025:1025"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8025/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - hanling_network
+      
   # ---------------------------------------------
   # Auth Service
   # ---------------------------------------------
@@ -66,6 +86,8 @@ services:
       database:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      mailhog:
         condition: service_healthy
     logging:
       driver: "json-file"
