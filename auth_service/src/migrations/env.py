@@ -8,7 +8,7 @@ from sqlalchemy import engine_from_config, pool
 root_path = dirname(dirname(dirname(abspath(__file__))))
 sys.path.insert(0, root_path)
 
-from src.core.settings import config as app_config
+from src.core.settings import config as app_config  # noqa
 from src.models import BaseORM, UserORM, UserProviderORM, UserSessionORM  # noqa
 
 config = context.config
