@@ -1,6 +1,10 @@
-from .security import SecurityService, TokenPairDTO
+from .otp_service import OTPService, OTPTypeEnum
+from .registration_service import RegistrationService
+from .session_service import SessionService
 
 __all__ = [
-    "SecurityService",
-    "TokenPairDTO",
+    "OTPService",
+    "OTPTypeEnum",
+    "RegistrationService",
+    "SessionService",
 ]
