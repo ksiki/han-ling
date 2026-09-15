@@ -7,7 +7,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from shared.http_handlers import init_exception_handlers
 
-from src.api.v1 import v1_router
+from src.api.v1.router import router as v1_router
+from src.core.http import http_client
 from src.core.settings import config
 from src.db import async_engine
 from src.redis.client import close_redis, init_redis
@@ -24,6 +25,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Запуск миксросевиса HanLing Auth...")
     await init_redis()
     yield
+    await http_client.aclose()
     await async_engine.dispose()
     await close_redis()
     logger.info("Микросервис HanLing Auth выключен")
