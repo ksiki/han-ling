@@ -1,4 +1,5 @@
-from collections.abc import AsyncGenerator
+import uuid
+from collections.abc import AsyncGenerator, Callable
 from typing import Annotated, Any
 
 from fastapi import Depends
@@ -11,10 +12,13 @@ from src.core.security import verify_token
 from src.db import UnitOfWork, async_session_maker
 from src.models import UserORM
 from src.redis.client import get_redis_client
-from src.use_cases import PasswordResetCaces, RegistrationCases
-
-access_token_cookie_schema = APIKeyCookie(name="access_token", auto_error=False)
-refresh_token_cookie_schema = APIKeyCookie(name="refresh_token", auto_error=False)
+from src.use_cases import (
+    AuthCases,
+    OAuthCases,
+    PasswordResetCaces,
+    RegistrationCases,
+    SessionCases,
+)
 
 
 async def _get_uow() -> AsyncGenerator[UnitOfWork, None]:
@@ -97,31 +101,164 @@ def get_password_recovery_cases(
     return PasswordResetCaces(uow=uow, redis_client=redis_client)
 
 
-async def verify_access_token(
-    access_token: Annotated[str, Depends(access_token_cookie_schema)],
-    uow: UnitOfWork = Depends(_get_uow),
+def get_auth_cases(uow: UnitOfWork = Depends(_get_uow)) -> AuthCases:
+    """Создает и возвращает экземпляр сценариев авторизации AuthCases.
+
+    Args:
+        uow: Экземпляр Unit of Work для управления транзакциями.
+        redis_client: Асинхронный клиент Redis для работы с временными состояниями.
+
+    Returns:
+        AuthCases: Инициализированный сценарий Use Case для авторизации.
+    """
+    return AuthCases(uow=uow)
+
+
+def get_oauth_cases(uow: UnitOfWork = Depends(_get_uow)) -> OAuthCases:
+    """Создает и возвращает экземпляр сценариев авторизации через сторонние сервисы OAuthCases.
+
+    Args:
+        uow: Экземпляр Unit of Work для управления транзакциями.
+        redis_client: Асинхронный клиент Redis для работы с временными состояниями.
+
+    Returns:
+        OAuthCases: Инициализированный сценарий Use Case для авторизации через сторонние сервисы.
+    """
+    return OAuthCases(uow=uow)
+
+
+def get_session_cases(uow: UnitOfWork = Depends(_get_uow)) -> SessionCases:
+    """Создает и возвращает экземпляр сценариев сессий SessionCases.
+
+    Args:
+        uow: Экземпляр Unit of Work для управления транзакциями.
+        redis_client: Асинхронный клиент Redis для работы с временными состояниями.
+
+    Returns:
+        SessionCases: Инициализированный сценарий Use Case для сессий.
+    """
+    return SessionCases(uow=uow)
+
+
+def token_payload_verifier(
+    token_getter: Callable[..., str], expected_type: str
+) -> Callable[..., dict[str, Any]]:
+    """Создает фабрику зависимостей FastAPI для извлечения и верификации JWT-токена.
+
+    Args:
+        token_getter: Зависимость или схема безопасности для получения необработанной строки токена.
+        expected_type: Ожидаемый тип токена (например, "access" или "refresh").
+
+    Returns:
+        Callable[..., dict[str, Any]]: Асинхронная функция-зависимость, возвращающая полезную нагрузку токена.
+    """
+
+    async def _verifier(
+        raw_token: Annotated[str, Depends(token_getter)],
+    ) -> dict[str, Any]:
+        """Проверяет токен на валидность и совпадение типа, возвращая его полезную нагрузку.
+
+        Args:
+            raw_token: Необработанная строка токена, полученная из зависимости.
+
+        Returns:
+            dict[str, Any]: Расшифрованная полезная нагрузка токена.
+        """
+        payload_dict = verify_token(
+            token=raw_token,
+            expected_type=expected_type,
+        )
+        return payload_dict
+
+    return _verifier
+
+
+access_token_cookie_schema = APIKeyCookie(name="access_token", auto_error=False)
+get_access_payload = token_payload_verifier(
+    token_getter=access_token_cookie_schema,
+    expected_type="access",
+)
+
+refresh_token_cookie_schema = APIKeyCookie(name="refresh_token", auto_error=False)
+get_refresh_payload = token_payload_verifier(
+    token_getter=refresh_token_cookie_schema,
+    expected_type="refresh",
+)
+
+
+async def _get_active_user_by_id(
+    user_id: uuid.UUID,
+    uow: UnitOfWork,
 ) -> UserORM:
-    decode_payload = verify_token(
-        token=access_token,
-        expected_type="access",
-    )
+    """Получает пользователя по идентификатору и валидирует статус его учетной записи.
 
-    return await _get_user_by_token_payload(payload=decode_payload, uow=uow)
+    Args:
+        user_id: Идентификатор пользователя.
+        uow: Экземпляр Unit of Work для доступа к репозиториям.
+
+    Returns:
+        UserORM: Экземпляр активного пользователя.
+
+    Raises:
+        InvalidTokenException: Если пользователь с данным ID не найден.
+        UserBannedOrDeletedException: Если учетная запись неактивна или удалена.
+    """
+    user = await uow.user.get_or_none(id=user_id)
+    if not user:
+        raise InvalidTokenException
+    if not user.is_valid:
+        raise UserBannedOrDeletedException
+    return user
 
 
-async def verify_refresh_token(
-    refresh_token: Annotated[str, Depends(refresh_token_cookie_schema)],
-    uow: UnitOfWork = Depends(_get_uow),
+async def get_access_session_id(
+    payload: Annotated[dict[str, Any], Depends(get_access_payload)],
+) -> uuid.UUID:
+    """Извлекает идентификатор сессии из полезной нагрузки access-токена.
+
+    Args:
+        payload: Полезная нагрузка проверенного access-токена.
+
+    Returns:
+        uuid.UUID: Идентификатор сессии пользователя.
+    """
+    return payload.get("session_id")
+
+
+async def get_user_from_access_token(
+    payload: Annotated[dict[str, Any], Depends(get_access_payload)],
+    uow: Annotated[UnitOfWork, Depends(_get_uow)],
 ) -> UserORM:
-    decode_payload = verify_token(
-        token=refresh_token,
-        expected_type="refresh",
-    )
+    """Извлекает и валидирует активного пользователя на основе access-токена.
 
-    current_session = await uow.user_sesson.get_or_none_by_jti(
-        jti=decode_payload.get("jti")
-    )
-    if not current_session or current_session.is_revoked:
+    Args:
+        payload: Полезная нагрузка проверенного access-токена.
+        uow: Экземпляр Unit of Work из зависимости FastAPI.
+
+    Returns:
+        UserORM: Экземпляр аутентифицированного активного пользователя.
+    """
+    return await _get_active_user_by_id(user_id=payload.get("sub"), uow=uow)
+
+
+async def _check_refresh_session(uow: UnitOfWork, jti: str) -> None:
+    current_session = await uow.user_session.get_by_jti(jti=jti)
+    if not current_session or not current_session.is_active:
         raise InvalidTokenException
 
-    return await _get_user_by_token_payload(payload=decode_payload)
+
+async def get_user_from_refresh_token(
+    payload: Annotated[dict[str, Any], Depends(get_refresh_payload)],
+    uow: Annotated[UnitOfWork, Depends(_get_uow)],
+) -> UserORM:
+    await _check_refresh_session(uow=uow, jti=payload.get("jti"))
+    return await _get_active_user_by_id(user_id=payload.get("sub"), uow=uow)
+
+
+async def get_jti_from_refresh_token(
+    payload: Annotated[dict[str, Any], Depends(get_refresh_payload)],
+    uow: Annotated[UnitOfWork, Depends(_get_uow)],
+) -> UserORM:
+    jti = payload.get("jti")
+    await _check_refresh_session(uow=uow, jti=jti)
+    return jti
