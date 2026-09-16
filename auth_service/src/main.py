@@ -22,6 +22,17 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Управляет жизненным циклом приложения: инициализацией и корректным завершением ресурсов.
+
+    Инициализирует подключение к Redis при старте сервиса.
+    При остановке закрывает HTTP-клиент, пул соединений SQLAlchemy и клиент Redis.
+
+    Args:
+        app: Экземпляр приложения FastAPI.
+
+    Yields:
+        None: Передает управление работающему приложению.
+    """
     logger.info("Запуск миксросевиса HanLing Auth...")
     await init_redis()
     yield
@@ -57,17 +68,11 @@ app.include_router(v1_router)
 
 @app.get("/health")
 async def health_check() -> dict[str, Any]:
+    """Проверяет работоспособность сервиса и режим отладки.
+
+    Returns:
+        dict[str, Any]: Словарь со статусом работы сервиса и флагом debug.
     """
-    Ручка для проверки статуса сервиса
-
-    Принимает:
-        - Ничего
-
-    Возвращает dict:
-        - status: str
-        - debug: bool
-    """
-
     return {
         "status": "ok",
         "debug": config.DEBUG,
