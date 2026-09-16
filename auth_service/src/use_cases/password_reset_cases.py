@@ -74,7 +74,7 @@ class PasswordResetCaces:
         """
         await self._otp_service.verify_reset_otp(email=email, otp=otp)
 
-        user = self._recovery_service.change_password_by_email(
+        user = await self._recovery_service.change_password_by_email(
             email=email, new_password=new_password
         )
         tokens = await self._session_service.create_session(

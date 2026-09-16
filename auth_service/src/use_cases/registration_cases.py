@@ -85,7 +85,7 @@ class RegistrationCases:
         user = await self._registration_service.create_user(
             email=email, password_hash=password_hash
         )
-        await self._uow.flush()
+
         tokens = await self._session_service.create_session(
             user=user, ip=ip, user_agent=user_agent
         )
