@@ -12,7 +12,7 @@ class Config(BaseConfig):
         alias="AUTH_SERVICE_POSTGRES_DB",
         default="auth_service_db",
     )
-    RADIS_DB: str = Field(
+    REDIS_DB: str = Field(
         alias="AUTH_SERVICE_REDIS_DB",
         default="0",
     )

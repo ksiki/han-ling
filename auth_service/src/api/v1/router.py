@@ -8,7 +8,7 @@ from src.api.v1.endpoints import (
     users_router,
 )
 
-router = APIRouter(prefix="/v1")
+router = APIRouter(prefix="/api/v1")
 
 router.include_router(registration_router)
 router.include_router(recovery_router)
