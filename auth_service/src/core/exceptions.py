@@ -19,6 +19,15 @@ class UserNotFoundException(AppBaseException):
     status_code: int = 400
 
 
+class ProviderLinkNotFoundException(AppBaseException):
+    """
+    Исключение если провайдера не существует
+    """
+
+    message = "The provider link was not found"
+    status_code: int = 401
+
+
 class UserAlreadyExistsException(AppBaseException):
     """
     Исключение если пользователь с таким email уже существует
@@ -26,15 +35,6 @@ class UserAlreadyExistsException(AppBaseException):
 
     message = "The user with this email already exists"
     status_code: int = 409
-
-
-class UserAlreadyLoggedInException(AppBaseException):
-    """
-    Исключение если пользователь уже авторизаван
-    """
-
-    message = "The user already logged in"
-    status_code: int = 400
 
 
 class UserBannedOrDeletedException(AppBaseException):
@@ -46,22 +46,13 @@ class UserBannedOrDeletedException(AppBaseException):
     status_code: int = 401
 
 
-class InvalidPasswordOrEmailException(AppBaseException):
+class PasswordOrEmailInvalidException(AppBaseException):
     """
     Исключение если email или пароль введенный пользователь неверный
     """
 
     message = "Invalid password or user's email address"
     status_code: int = 401
-
-
-class PasswordsDoNotMatchException(AppBaseException):
-    """
-    Исключение если пароль и повтор пароля при регистрации не совпадают
-    """
-
-    message = "Password and password confirmation do not match"
-    status_code: int = 400
 
 
 class RedisPoolNotInitializedException(AppBaseException):
@@ -98,3 +89,21 @@ class OTPAttemptsExceededException(AppBaseException):
 
     message = "OTP attempts exceeded"
     status_code: int = 400
+
+
+class SessionInvalidException(AppBaseException):
+    """
+    Выбрасывается при ошибках с сессиями
+    """
+
+    message = "Session invalid"
+    status_code: int = 400
+
+
+class GoogleTokenInvalidException(AppBaseException):
+    """
+    Выбрасывается при ошибках с id_token от Google
+    """
+
+    message = "Google token is invalid"
+    status_code: int = 401

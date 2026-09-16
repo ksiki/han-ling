@@ -42,5 +42,10 @@ class Config(BaseConfig):
     OTP_EXPIRE_MINUTES: int = 15
     MAX_OTP_ATTEMPTS: int = 5
 
+    # ---------------------------------------------
+    # OTP
+    # ---------------------------------------------
+    GOOGLE_CLIENT_ID: str = "google_client_id"
+
 
 config: Final[Config] = Config()
