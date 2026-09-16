@@ -37,7 +37,7 @@ class UserSessionRepository(SQLAclchemyRepository[UserSessionORM]):
         result = await self._session.execute(query)
         return list(result.scalars().all())
 
-    async def get_by_jti(self, jti: str) -> UserSessionORM:
+    async def get_by_jti(self, jti: uuid.UUID) -> UserSessionORM:
         session = await self.get_or_none(refresh_token_jti=jti)
         if not session:
             raise InvalidTokenException

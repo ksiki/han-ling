@@ -60,7 +60,7 @@ class OTPService(RedisServiceAbstract):
 
         try:
             await asyncio.wait_for(
-                self.redis.set(
+                self._redis.set(
                     name=key,
                     value=json.dumps(payload),
                     ex=config.OTP_EXPIRE_MINUTES * 60,
@@ -86,7 +86,7 @@ class OTPService(RedisServiceAbstract):
             OTPInvalidException: Если ключ отсутствует или истек таймаут ожидания.
         """
         result_bytes = await asyncio.wait_for(
-            self.redis.get(key),
+            self._redis.get(key),
             timeout=0.1,
         )
         if not result_bytes:
@@ -126,24 +126,24 @@ class OTPService(RedisServiceAbstract):
 
                 if current_attempts >= config.MAX_OTP_ATTEMPTS:
                     await asyncio.wait_for(
-                        self.redis.delete(key),
+                        self._redis.delete(key),
                         timeout=0.1,
                     )
                     raise OTPAttemptsExceededException
 
                 ttl = await asyncio.wait_for(
-                    self.redis.ttl(key),
+                    self._redis.ttl(key),
                     timeout=0.1,
                 )
                 if ttl > 0:
                     await asyncio.wait_for(
-                        self.redis.set(key, json.dumps(payload), ex=ttl),
+                        self._redis.set(key, json.dumps(payload), ex=ttl),
                         timeout=0.1,
                     )
                 raise OTPInvalidException
 
             await asyncio.wait_for(
-                self.redis.delete(key),
+                self._redis.delete(key),
                 timeout=0.1,
             )
             return payload

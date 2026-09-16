@@ -36,15 +36,15 @@ class OAuthCases:
         Raises:
             OAuthTokenInvalidException: Если переданный Google ID Token не прошел валидацию.
         """
-        token_payload = await self._oauth_service.chech_google_token(token=id_token)
+        token_payload = self._oauth_service.chech_google_token(token=id_token)
 
-        google_sub = token_payload.get("sub")
+        google_sub = token_payload.get("sub", "")
         try:
             await self._oauth_service.get_provider(
                 provider_id=google_sub, type=ProviderEnum.GOOGLE
             )
         except ProviderLinkNotFoundException:
-            user_email = token_payload.get("email")
+            user_email = token_payload.get("email", "")
             try:
                 user = await self._auth_service.authenticate(
                     email=user_email, password=None

@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
-from redis import Redis
+from redis.asyncio import Redis
 
 
 class RedisServiceAbstract(ABC):
@@ -10,16 +10,4 @@ class RedisServiceAbstract(ABC):
         Args:
             redis_client: Экземпляр клиента Redis для выполнения операций с хранилищем.
         """
-        self.redis = redis_client
-
-    @abstractmethod
-    def _make_key(self) -> str:
-        """Формирует ключ для сохранения или извлечения данных из Redis.
-
-        Returns:
-            str: Сгенерированный строковый ключ.
-
-        Raises:
-            NotImplementedError: Если метод не реализован в подклассе.
-        """
-        raise NotImplementedError
+        self._redis = redis_client

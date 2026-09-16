@@ -1,3 +1,4 @@
+import uuid
 from typing import Any
 
 from google.auth.transport import requests
@@ -71,7 +72,7 @@ class OAuthService:
         return provider_link
 
     async def create_provider(
-        self, user_id: str, provider_id: str, type: ProviderEnum
+        self, user_id: uuid.UUID, provider_id: str, type: ProviderEnum
     ) -> UserProviderORM:
         """Создает и добавляет в сессию новую привязку внешнего OAuth-провайдера к пользователю.
 
@@ -86,4 +87,6 @@ class OAuthService:
         new_provider = UserProviderORM(
             user_id=user_id, provider_id=provider_id, provider=type
         )
-        self._uow.user_provider.add(new_provider)
+        await self._uow.user_provider.add(new_provider)
+        await self._uow.flush()
+        return new_provider

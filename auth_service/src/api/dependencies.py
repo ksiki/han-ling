@@ -1,8 +1,8 @@
 import uuid
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine
 from typing import Annotated, Any
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import APIKeyCookie
 from redis.asyncio import Redis
 from shared.exceptions import InvalidTokenException
@@ -106,7 +106,6 @@ def get_auth_cases(uow: UnitOfWork = Depends(_get_uow)) -> AuthCases:
 
     Args:
         uow: Экземпляр Unit of Work для управления транзакциями.
-        redis_client: Асинхронный клиент Redis для работы с временными состояниями.
 
     Returns:
         AuthCases: Инициализированный сценарий Use Case для авторизации.
@@ -119,7 +118,6 @@ def get_oauth_cases(uow: UnitOfWork = Depends(_get_uow)) -> OAuthCases:
 
     Args:
         uow: Экземпляр Unit of Work для управления транзакциями.
-        redis_client: Асинхронный клиент Redis для работы с временными состояниями.
 
     Returns:
         OAuthCases: Инициализированный сценарий Use Case для авторизации через сторонние сервисы.
@@ -132,7 +130,6 @@ def get_session_cases(uow: UnitOfWork = Depends(_get_uow)) -> SessionCases:
 
     Args:
         uow: Экземпляр Unit of Work для управления транзакциями.
-        redis_client: Асинхронный клиент Redis для работы с временными состояниями.
 
     Returns:
         SessionCases: Инициализированный сценарий Use Case для сессий.
@@ -141,8 +138,8 @@ def get_session_cases(uow: UnitOfWork = Depends(_get_uow)) -> SessionCases:
 
 
 def token_payload_verifier(
-    token_getter: Callable[..., str], expected_type: str
-) -> Callable[..., dict[str, Any]]:
+    token_getter: Callable[[Request], Awaitable[str | None]], expected_type: str
+) -> Callable[[str], Coroutine[Any, Any, dict[str, Any]]]:
     """Создает фабрику зависимостей FastAPI для извлечения и верификации JWT-токена.
 
     Args:
@@ -150,7 +147,7 @@ def token_payload_verifier(
         expected_type: Ожидаемый тип токена (например, "access" или "refresh").
 
     Returns:
-        Callable[..., dict[str, Any]]: Асинхронная функция-зависимость, возвращающая полезную нагрузку токена.
+        Callable[[str], Coroutine[Any, Any, dict[str, Any]]]: Асинхронная функция-зависимость, возвращающая полезную нагрузку токена.
     """
 
     async def _verifier(
@@ -211,6 +208,26 @@ async def _get_active_user_by_id(
     return user
 
 
+def _safe_extract_uuid(payload: dict[str, Any], key: str) -> uuid.UUID:
+    """Безопасно извлекает и валидирует UUID из полезной нагрузки токена по указанному ключу.
+
+    Args:
+        payload: Словарь данных полезной нагрузки JWT-токена.
+        key: Ключ, по которому извлекается значение UUID.
+
+    Returns:
+        uuid.UUID: Преобразованный объект UUID.
+
+    Raises:
+        InvalidTokenException: Если значение отсутствует или имеет некорректный формат UUID.
+    """
+    raw_value = payload.get(key)
+    try:
+        return uuid.UUID(str(raw_value))
+    except ValueError:
+        raise InvalidTokenException
+
+
 async def get_access_session_id(
     payload: Annotated[dict[str, Any], Depends(get_access_payload)],
 ) -> uuid.UUID:
@@ -222,7 +239,7 @@ async def get_access_session_id(
     Returns:
         uuid.UUID: Идентификатор сессии пользователя.
     """
-    return payload.get("session_id")
+    return _safe_extract_uuid(payload=payload, key="session_id")
 
 
 async def get_user_from_access_token(
@@ -238,10 +255,21 @@ async def get_user_from_access_token(
     Returns:
         UserORM: Экземпляр аутентифицированного активного пользователя.
     """
-    return await _get_active_user_by_id(user_id=payload.get("sub"), uow=uow)
+    return await _get_active_user_by_id(
+        user_id=_safe_extract_uuid(payload=payload, key="sub"), uow=uow
+    )
 
 
-async def _check_refresh_session(uow: UnitOfWork, jti: str) -> None:
+async def _check_refresh_session(uow: UnitOfWork, jti: uuid.UUID) -> None:
+    """Проверяет существование и активность сессии по идентификатору jti токена.
+
+    Args:
+        uow: Экземпляр Unit of Work для доступа к сессиям в базе данных.
+        jti: Уникальный идентификатор JWT токена (jti).
+
+    Raises:
+        InvalidTokenException: Если сессия не найдена или не является активной.
+    """
     current_session = await uow.user_session.get_by_jti(jti=jti)
     if not current_session or not current_session.is_active:
         raise InvalidTokenException
@@ -251,14 +279,42 @@ async def get_user_from_refresh_token(
     payload: Annotated[dict[str, Any], Depends(get_refresh_payload)],
     uow: Annotated[UnitOfWork, Depends(_get_uow)],
 ) -> UserORM:
-    await _check_refresh_session(uow=uow, jti=payload.get("jti"))
-    return await _get_active_user_by_id(user_id=payload.get("sub"), uow=uow)
+    """Извлекает и валидирует пользователя на основе refresh-токена с проверкой активности сессии.
+
+    Args:
+        payload: Полезная нагрузка проверенного refresh-токена.
+        uow: Экземпляр Unit of Work из зависимости FastAPI.
+
+    Returns:
+        UserORM: Экземпляр аутентифицированного активного пользователя.
+
+    Raises:
+        InvalidTokenException: Если сессия по jti не найдена, отозвана или истекла.
+    """
+    await _check_refresh_session(
+        uow=uow, jti=_safe_extract_uuid(payload=payload, key="jti")
+    )
+    return await _get_active_user_by_id(
+        user_id=_safe_extract_uuid(payload=payload, key="sub"), uow=uow
+    )
 
 
 async def get_jti_from_refresh_token(
     payload: Annotated[dict[str, Any], Depends(get_refresh_payload)],
     uow: Annotated[UnitOfWork, Depends(_get_uow)],
-) -> UserORM:
-    jti = payload.get("jti")
+) -> uuid.UUID:
+    """Извлекает и верифицирует идентификатор jti активной сессии из refresh-токена.
+
+    Args:
+        payload: Полезная нагрузка проверенного refresh-токена.
+        uow: Экземпляр Unit of Work из зависимости FastAPI.
+
+    Returns:
+        uuid.UUID: Валидный идентификатор jti сессии.
+
+    Raises:
+        InvalidTokenException: Если связанная сессия не найдена или неактивна.
+    """
+    jti = _safe_extract_uuid(payload=payload, key="jti")
     await _check_refresh_session(uow=uow, jti=jti)
     return jti

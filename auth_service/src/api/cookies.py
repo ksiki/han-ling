@@ -1,10 +1,14 @@
+from typing import Literal
+
 from fastapi import Response
 
 from src.core.settings import config
 
+SameSiteType = Literal["lax", "strict", "none"]
+
 _SECURE_FLAG: bool = not config.DEBUG
 _DEFAULT_PATH: str = "/"
-_DEFAULT_SAMESITE: str = "lax"
+_DEFAULT_SAMESITE: SameSiteType = "lax"
 
 
 def refresh_access_cookies(

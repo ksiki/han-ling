@@ -3,11 +3,13 @@ import uuid
 
 from pydantic import BaseModel, EmailStr
 
+from src.models import RoleEnum
+
 
 class UserProfileResponse(BaseModel):
     id: uuid.UUID
     email: EmailStr
-    role: str
+    role: RoleEnum
     registed_at: datetime.datetime
 
 

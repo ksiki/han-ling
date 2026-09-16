@@ -30,9 +30,9 @@ class BaseConfig(BaseSettings):
     # ---------------------------------------------
     # Базовые переменные для подключения
     # ---------------------------------------------
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str
+    POSTGRES_USER: str = "admin"
+    POSTGRES_PASSWORD: str = "admin"
+    POSTGRES_DB: str = "postgre"
     POSTGRES_HOST: str = "database"
     POSTGRES_PORT: str = "5432"
     POSTGRES_DRIVER: str = "asyncpg"
