@@ -3,7 +3,7 @@ DC = docker compose -f $(DC_FILE)
 AUTH_DIR = auth_service
 MESSAGE ?= "migration"
 
-.PHONY: up down restart build logs ps auth-upgrade auth-revision auth-downgrade auth-logs db-shell redis-cli pre-commit setup
+.PHONY: up down restart build logs ps auth-upgrade auth-revision auth-downgrade auth-logs db-logs db-shell redis-cli pre-commit setup mypy check
 
 up:
 	$(DC) up -d
@@ -45,6 +45,11 @@ redis-cli:
 
 pre-commit:
 	pre-commit run --all-files
+
+mypy:
+	cd $(AUTH_DIR) && poetry run mypy .
+
+check: pre-commit mypy
 
 setup:
 	pre-commit install
