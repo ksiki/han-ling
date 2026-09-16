@@ -1,4 +1,4 @@
-from src.core.exceptions import UserAlreadyExistsException
+from src.core.exceptions import UserAlreadyExistsException, UserNotFoundException
 from src.db import UnitOfWork
 from src.models import UserORM
 
@@ -21,19 +21,23 @@ class RegistrationService:
         Raises:
             UserAlreadyExistsException: Если пользователь с таким адресом уже зарегистрирован.
         """
-        user = await self._uow.user.get_by_email(email=email)
-        if user:
+        try:
+            await self._uow.user.get_by_email(email=email)
             raise UserAlreadyExistsException
+        except UserNotFoundException:
+            pass
 
-    async def create_user(self, email: str, password_hash: str) -> UserORM:
+    async def create_user(self, email: str, password_hash: str | None) -> UserORM:
         """Создает нового пользователя и сохраняет его в базе данных.
 
         Args:
             email: Адрес электронной почты пользователя.
-            password_hash: Хэш пароля пользователя.
+            password_hash: Хэш пароля пользователя (может быть None).
 
         Returns:
             uuid.UUID: Уникальный идентификатор созданного пользователя.
         """
         user = UserORM(email=email, password_hash=password_hash)
-        return await self._uow.user.add(user)
+        await self._uow.user.add(user)
+        await self._uow.flush()
+        return user

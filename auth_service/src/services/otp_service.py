@@ -60,7 +60,7 @@ class OTPService(RedisServiceAbstract):
 
         try:
             await asyncio.wait_for(
-                await self.redis.set(
+                self.redis.set(
                     name=key,
                     value=json.dumps(payload),
                     ex=config.OTP_EXPIRE_MINUTES * 60,

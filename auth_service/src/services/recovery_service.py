@@ -1,4 +1,3 @@
-from src.core.exceptions import UserNotFoundException
 from src.core.security import get_password_hash
 from src.db import UnitOfWork
 from src.models import UserORM
@@ -27,8 +26,6 @@ class RecoveryService:
             UserNotFoundException: Если пользователь с указанным адресом электронной почты не найден.
         """
         user = await self._uow.user.get_by_email(email=email)
-        if not user:
-            raise UserNotFoundException
 
         new_password_hash = get_password_hash(password=new_password)
         user.password_hash = new_password_hash

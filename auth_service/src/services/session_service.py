@@ -18,6 +18,21 @@ class SessionService:
         """
         self._uow = uow
 
+    async def _check_user(self, user: UserORM | None) -> None:
+        """Проверяет существование и валидность пользователя.
+
+        Args:
+            user: Экземпляр пользователя или None.
+
+        Raises:
+            UserNotFoundException: Если пользователь не найден (передан None).
+            UserBannedOrDeletedException: Если пользователь деактивирован или помечен как удаленный.
+        """
+        if not user:
+            raise UserNotFoundException
+        if not user.is_valid:
+            raise UserBannedOrDeletedException
+
     def _create_refresh_token(
         self, user_id: uuid.UUID
     ) -> tuple[str, uuid.UUID, datetime.datetime]:
@@ -45,14 +60,13 @@ class SessionService:
         )
         return token, jti, expire
 
-    def _create_access_token(
+    def create_access_token(
         self, user_id: uuid.UUID, session_id: uuid.UUID, user_role: str
     ) -> str:
         """Создает JWT access токен с привязкой к сессии и роли пользователя.
 
         Args:
             user_id: Идентификатор пользователя.
-            session_id: Идентификатор связанной сессии пользователя.
             user_role: Роль пользователя в системе.
 
         Returns:
@@ -74,21 +88,6 @@ class SessionService:
             payload=to_encode, key=config.SECRET_KEY, algorithm=config.ALGORITHM
         )
         return token
-
-    async def _check_user(self, user: UserORM | None) -> None:
-        """Проверяет существование и валидность пользователя.
-
-        Args:
-            user: Экземпляр пользователя или None.
-
-        Raises:
-            UserNotFoundException: Если пользователь не найден (передан None).
-            UserBannedOrDeletedException: Если пользователь деактивирован или помечен как удаленный.
-        """
-        if not user:
-            raise UserNotFoundException
-        if not user.is_valid:
-            raise UserBannedOrDeletedException
 
     async def create_session(
         self, user: UserORM, ip: str, user_agent: str
@@ -130,8 +129,9 @@ class SessionService:
             expires_at=expires_at,
         )
         session = await self._uow.user_session.add(new_session)
+        await self._uow.flush()
 
-        access_token = self._create_access_token(
+        access_token = self.create_access_token(
             user_id=user.id, session_id=session.id, user_role=user.role.value
         )
         return access_token, refresh_token
