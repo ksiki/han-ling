@@ -1,8 +1,8 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, status
 
+from src.api.cookies import set_auth_cookies
 from src.api.dependencies import get_password_recovery_cases
 from src.background_tasks.email import send_otp_email
-from src.core.settings import config
 from src.schemas.common import ResendOTPRequest, SuccessResponse
 from src.schemas.recovery import PasswordResetConfirmRequest, PasswordResetSendRequest
 from src.use_cases import PasswordResetCaces
@@ -91,21 +91,8 @@ async def confirm(
         ip=ip,
         user_agent=user_agent,
     )
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=not config.DEBUG,
-        samesite="lax",
-        max_age=config.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=not config.DEBUG,
-        samesite="lax",
-        max_age=config.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+    set_auth_cookies(
+        response=response, access_token=access_token, refresh_token=refresh_token
     )
 
     return SuccessResponse()
