@@ -1,6 +1,7 @@
 import uuid
 
 from shared.db import SQLAclchemyRepository
+from shared.exceptions import InvalidTokenException
 from sqlalchemy import func, select
 
 from src.models import UserSessionORM
@@ -35,3 +36,9 @@ class UserSessionRepository(SQLAclchemyRepository[UserSessionORM]):
         )
         result = await self._session.execute(query)
         return list(result.scalars().all())
+
+    async def get_by_jti(self, jti: str) -> UserSessionORM:
+        session = await self.get_or_none(refresh_token_jti=jti)
+        if not session:
+            raise InvalidTokenException
+        return session

@@ -1,5 +1,6 @@
 from shared.db import SQLAclchemyRepository
 
+from src.core.exceptions import UserNotFoundException
 from src.models import UserORM
 
 
@@ -12,13 +13,20 @@ class UserRepository(SQLAclchemyRepository[UserORM]):
         """
         super().__init__(session, model_cls=UserORM)
 
-    async def get_by_email(self, email: str) -> UserORM | None:
-        """Получает пользователя по адресу электронной почты.
+    async def get_by_email(self, email: str) -> UserORM:
+        """Получает пользователя по адресу электронной почты с проверкой на существование.
 
         Args:
-            email: Адрес электронной почты для поиска.
+            email: Адрес электронной почты пользователя.
 
         Returns:
-            UserORM | None: Экземпляр найденного пользователя или None, если пользователь не найден.
+            UserORM: Найденный экземпляр пользователя.
+
+        Raises:
+            UserNotFoundException: Если пользователь с указанным email не найден.
         """
-        return await self.get_or_none(email=email)
+        user = await self.get_or_none(email=email)
+        if not user:
+            raise UserNotFoundException
+
+        return user
