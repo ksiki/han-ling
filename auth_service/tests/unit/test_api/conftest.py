@@ -6,23 +6,8 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from src.api.dependencies import get_registration_cases
+from src.api.dependencies import get_password_recovery_cases, get_registration_cases
 from src.main import app
-
-
-@pytest_asyncio.fixture
-async def unit_client(
-    mock_registration_cases,
-) -> AsyncGenerator[AsyncClient, Any, None]:
-    app.dependency_overrides[get_registration_cases] = lambda: mock_registration_cases
-
-    transport = ASGITransport(app=app)
-    async with AsyncClient(
-        transport=transport, base_url="http://testserver/auth/api/v1"
-    ) as ac:
-        yield ac
-
-    app.dependency_overrides.clear()
 
 
 @pytest_asyncio.fixture
@@ -37,11 +22,52 @@ def mock_registration_cases() -> AsyncMock:
     return mock
 
 
+@pytest_asyncio.fixture
+def mock_password_recovery_cases() -> AsyncMock:
+    mock = AsyncMock()
+    mock.begin_password_recovery.return_value = "123456"
+    mock.resend_otp.return_value = "654321"
+    mock.finish_password_recovery.return_value = (
+        "access_token_template",
+        "refresh_token_template",
+    )
+    return mock
+
+
+@pytest_asyncio.fixture
+async def unit_client(
+    mock_registration_cases,
+    mock_password_recovery_cases,
+) -> AsyncGenerator[AsyncClient, Any, None]:
+    app.dependency_overrides[get_registration_cases] = lambda: mock_registration_cases
+    app.dependency_overrides[get_password_recovery_cases] = lambda: (
+        mock_password_recovery_cases
+    )
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(
+        transport=transport, base_url="http://testserver/auth/api/v1"
+    ) as ac:
+        yield ac
+
+    app.dependency_overrides.clear()
+
+
 @pytest.fixture
-def mock_send_email(mocker) -> AsyncMock:
+def mock_send_email_registration(mocker) -> AsyncMock:
     return mocker.patch("src.api.v1.endpoints.registration.send_otp_email")
 
 
 @pytest.fixture
-def mock_set_auth_cookies(mocker) -> MagicMock:
+def mock_send_email_password_recovery(mocker) -> AsyncMock:
+    return mocker.patch("src.api.v1.endpoints.recovery.send_otp_email")
+
+
+@pytest.fixture
+def mock_set_auth_cookies_registration(mocker) -> MagicMock:
     return mocker.patch("src.api.v1.endpoints.registration.set_auth_cookies")
+
+
+@pytest.fixture
+def mock_set_auth_cookies_password_recovery(mocker) -> MagicMock:
+    return mocker.patch("src.api.v1.endpoints.recovery.set_auth_cookies")

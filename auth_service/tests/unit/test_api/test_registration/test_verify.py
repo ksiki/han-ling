@@ -2,7 +2,7 @@ from unittest.mock import ANY
 
 
 async def test_verify_success(
-    unit_client, mock_registration_cases, mock_set_auth_cookies
+    unit_client, mock_registration_cases, mock_set_auth_cookies_registration
 ) -> None:
     payload = {
         "email": "test@example.com",
@@ -24,7 +24,7 @@ async def test_verify_success(
         user_agent="My-Test-Agent/1.0",
     )
 
-    mock_set_auth_cookies.assert_called_once_with(
+    mock_set_auth_cookies_registration.assert_called_once_with(
         response=ANY,
         access_token="access_token_template",
         refresh_token="refresh_token_template",
@@ -32,7 +32,7 @@ async def test_verify_success(
 
 
 async def test_verify_invalid_email(
-    unit_client, mock_registration_cases, mock_set_auth_cookies
+    unit_client, mock_registration_cases, mock_set_auth_cookies_registration
 ) -> None:
     payload = {
         "email": "test-example.com",
@@ -44,4 +44,4 @@ async def test_verify_invalid_email(
     assert response.status_code == 422
 
     mock_registration_cases.begin_registration.assert_not_awaited()
-    mock_set_auth_cookies.assert_not_called()
+    mock_set_auth_cookies_registration.assert_not_called()
