@@ -39,6 +39,7 @@ ruff = "^0.16.7"
 mypy = "^2.3.1"
 respx = "^0.23.1"
 pytest-mock = "^3.15.1"
+pytest-cov = "^7.1.0"
 
 
 [tool.poetry.dependencies]
@@ -51,3 +52,7 @@ asyncio_mode = "auto"
 
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends"]
+
+
+[tool.mypy]
+exclude = ["^tests/"]
