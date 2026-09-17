@@ -110,7 +110,7 @@ async def logout(
 
 
 @router.delete(
-    "/session/{session_id}",
+    "/sessions/{session_id}",
     status_code=status.HTTP_200_OK,
     response_model=SuccessResponse,
 )
