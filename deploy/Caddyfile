@@ -23,7 +23,10 @@ hanling.local {
 
     handle /auth/* {
         reverse_proxy auth_service:8000 {
-            health_timeout 5s
+            health_uri /auth/ready
+            health_interval 10s
+            health_timeout 2s
+            health_status 2xx
         }
     }
 
