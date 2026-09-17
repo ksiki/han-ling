@@ -32,46 +32,9 @@ async def _get_uow() -> AsyncGenerator[UnitOfWork, None]:
         yield uow
 
 
-async def _get_redis_client() -> Redis:
-    """Возвращает экземпляр асинхронного клиента Redis для внедрения зависимостей.
-
-    Returns:
-        Redis: Экземпляр клиента Redis.
-    """
-    return get_redis_client()
-
-
-async def _get_user_by_token_payload(
-    payload: dict[str, Any],
-    uow: UnitOfWork = Depends(_get_uow),
-) -> UserORM | None:
-    """Извлекает пользователя по полезной нагрузке JWT-токена и валидирует его статус.
-
-    Args:
-        payload: Данные полезной нагрузки JWT-токена, содержащие sub (ID пользователя).
-        uow: Экземпляр Unit of Work для доступа к базе данных.
-
-    Returns:
-        UserORM | None: Экземпляр активного пользователя.
-
-    Raises:
-        InvalidTokenException: Если пользователь с данным ID не найден в базе данных.
-        UserBannedOrDeletedException: Если пользователь деактивирован, заблокирован или помечен удаленным.
-    """
-    user_id = payload.get("sub")
-    user = await uow.user.get_or_none(id=user_id)
-
-    if not user:
-        raise InvalidTokenException
-    if not user.is_valid:
-        raise UserBannedOrDeletedException
-
-    return user
-
-
 def get_registration_cases(
     uow: UnitOfWork = Depends(_get_uow),
-    redis_client: Redis = Depends(_get_redis_client),
+    redis_client: Redis = Depends(get_redis_client),
 ) -> RegistrationCases:
     """Создает и возвращает экземпляр сценариев регистрации RegistrationCases.
 
@@ -87,7 +50,7 @@ def get_registration_cases(
 
 def get_password_recovery_cases(
     uow: UnitOfWork = Depends(_get_uow),
-    redis_client: Redis = Depends(_get_redis_client),
+    redis_client: Redis = Depends(get_redis_client),
 ) -> PasswordResetCaces:
     """Создает и возвращает экземпляр сценариев восстановления доступа PasswordResetCaces.
 
