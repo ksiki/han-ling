@@ -1,9 +1,9 @@
-DC_FILE = deploy/docker-compose.yml
+DC_FILE = deploy/docker-compose.yaml
 DC = docker compose -f $(DC_FILE)
 AUTH_DIR = auth_service
 MESSAGE ?= "migration"
 
-.PHONY: up down restart build logs ps auth-upgrade auth-revision auth-downgrade auth-logs db-logs db-shell redis-cli pre-commit setup mypy check
+.PHONY: up down restart build logs ps auth-upgrade auth-revision auth-downgrade auth-logs auth-test db-logs db-shell redis-cli pre-commit setup mypy check
 
 up:
 	$(DC) up -d
@@ -33,6 +33,9 @@ auth-downgrade:
 
 auth-logs:
 	$(DC) logs -f auth_service
+
+auth-test:
+	cd $(AUTH_DIR) && poetry run pytest --cov=src --cov-report=html
 
 db-logs:
 	$(DC) logs -f database
