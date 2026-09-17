@@ -5,6 +5,4 @@ import pytest
 
 @pytest.fixture
 def fake_uow() -> AsyncMock:
-    uow = AsyncMock()
-    uow.user = AsyncMock()
-    return uow
+    return AsyncMock()
