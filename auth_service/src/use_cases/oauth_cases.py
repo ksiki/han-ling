@@ -36,7 +36,7 @@ class OAuthCases:
         Raises:
             OAuthTokenInvalidException: Если переданный Google ID Token не прошел валидацию.
         """
-        token_payload = self._oauth_service.chech_google_token(token=id_token)
+        token_payload = self._oauth_service.check_google_token(token=id_token)
 
         google_sub = token_payload.get("sub", "")
         try:

@@ -102,26 +102,34 @@ services:
   # ---------------------------------------------
   # Observability Agent
   # ---------------------------------------------
-  # alloy:
-  #   image: grafana/alloy:latest
-  #   container_name: alloy
-  #   restart: unless-stopped
-  #   command:
-  #     - run
-  #     - /etc/alloy/config.alloy
-  #     - --storage.path=/var/lib/alloy/data
-  #   ports:
-  #     - "127.0.0.1:12345:12345"
-  #   volumes:
-  #     - ./config.alloy:/etc/alloy/config.alloy:ro
-  #     - /var/run/docker.sock:/var/run/docker.sock:ro
-  #     - /proc:/host/proc:ro
-  #     - /sys:/host/sys:ro
-  #     - /:/host/root:ro
-  #   environment:
-  #     - ALLOY_ENV=production
-  #   networks:
-  #   - local_network
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    restart: unless-stopped
+    privileged: true
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+      - --cluster.enabled=false
+    ports:
+      - "127.0.0.1:12345:12345"
+    volumes:
+      - ./config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /run/containerd/containerd.sock:/run/containerd/containerd.sock:ro
+      - /:/rootfs:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    environment:
+      - ALLOY_ENV=production
+      - GOMEMLIMIT=80MiB
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+    networks:
+    - local_network
 
   # ---------------------------------------------
   # Development

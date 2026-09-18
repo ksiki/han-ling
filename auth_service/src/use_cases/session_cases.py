@@ -57,7 +57,7 @@ class SessionCases:
                 ip_address=session.ip_address,
                 user_agent=session.user_agent,
                 created_at=session.created_at,
-                is_current=str(session.id) == currents_session_id,
+                is_current=session.id == currents_session_id,
             )
             for session in sessions
         ]

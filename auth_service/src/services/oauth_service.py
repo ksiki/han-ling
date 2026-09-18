@@ -23,7 +23,7 @@ class OAuthService:
         """
         self._uow = uow
 
-    def chech_google_token(self, token: str) -> dict[str, Any]:
+    def check_google_token(self, token: str) -> dict[str, Any]:
         """Верифицирует Google ID Token и проверяет подтверждение адреса электронной почты.
 
         Args:
