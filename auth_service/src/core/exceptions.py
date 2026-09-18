@@ -107,3 +107,12 @@ class GoogleTokenInvalidException(AppBaseException):
 
     message = "Google token is invalid"
     status_code: int = 401
+
+
+class NicknameInvalidException(AppBaseException):
+    """
+    Выбрасывается при ошибках с невалидным nickname
+    """
+
+    message = "Invalid nickname"
+    status_code: int = 400
