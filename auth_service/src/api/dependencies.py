@@ -16,6 +16,7 @@ from src.use_cases import (
     AuthCases,
     OAuthCases,
     PasswordResetCaces,
+    ProfileCases,
     RegistrationCases,
     SessionCases,
 )
@@ -98,6 +99,18 @@ def get_session_cases(uow: UnitOfWork = Depends(_get_uow)) -> SessionCases:
         SessionCases: Инициализированный сценарий Use Case для сессий.
     """
     return SessionCases(uow=uow)
+
+
+def get_profile_cases(uow: UnitOfWork = Depends(_get_uow)) -> ProfileCases:
+    """Создает и возвращает экземпляр сценариев профиля ProfileCases.
+
+    Args:
+        uow: Экземпляр Unit of Work для управления транзакциями.
+
+    Returns:
+        ProfileCases: Инициализированный сценарий Use Case для профиля.
+    """
+    return ProfileCases(uow=uow)
 
 
 def token_payload_verifier(
