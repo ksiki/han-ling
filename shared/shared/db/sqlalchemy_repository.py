@@ -30,6 +30,23 @@ class SQLAclchemyRepository(RepositoryAbstract[T]):
         self._session.add(entity)
         return entity
 
+    async def get(self, **kwargs: Any) -> T:
+        """Находит и возвращает одну запись модели по переданным критериям.
+
+        Args:
+            **kwargs: Именованные параметры, соответствующие колонкам модели для фильтрации.
+
+        Returns:
+            T: Найденный экземпляр модели.
+
+        Raises:
+            NoResultFound: Если запись не найдена.
+            MultipleResultsFound: Если найдено более одной записи.
+        """
+        query = select(self._model_cls).filter_by(**kwargs)
+        result = await self._session.execute(query)
+        return result.scalar_one()
+
     async def get_or_none(self, **kwargs: Any) -> T | None:
         """Находит и возвращает одну запись модели по переданным критериям фильтрации.
 
