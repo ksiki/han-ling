@@ -12,7 +12,8 @@ class BaseConfig(BaseSettings):
     # Общие значения
     # ---------------------------------------------
     DEBUG: bool = True
-    FRONTEND_URLS: list[str] = ["http://hanling.local", "https://hanling.local"]
+    PRODUCT_NAME: str = "HanLIng"  # TODO: поменять имя
+    DOMAIN: str = "hanling.local"  # TODO: поменять домен
 
     # ---------------------------------------------
     # Безопастность
@@ -21,11 +22,17 @@ class BaseConfig(BaseSettings):
     ALGORITHM: str = "HS256"
 
     # ---------------------------------------------
-    # Mailhog
+    # EMAIL
     # ---------------------------------------------
-    SMTP_HOST: str = "mailhog"
-    SMTP_PORT: int = 1025
-    SENDER_EMAIL: str = "noreply@yourdomain.com"
+    RESEND_URL: str = "https://api.resend.com/emails"
+    RESEND_API_KEY: str = "resend_api_key"
+
+    # ---------------------------------------------
+    # OpenTelemetry & Centry
+    # --------------------------------------------
+    OTLP_ENDPOINT: str = "http://alloy:4317"
+    SENTRY_DSN: str | None = None
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.05
 
     # ---------------------------------------------
     # Базовые переменные для подключения
@@ -33,13 +40,13 @@ class BaseConfig(BaseSettings):
     POSTGRES_USER: str = "admin"
     POSTGRES_PASSWORD: str = "admin"
     POSTGRES_DB: str = "postgre"
-    POSTGRES_HOST: str = "database"
+    POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: str = "5432"
     POSTGRES_DRIVER: str = "asyncpg"
 
     REDIS_HOST: str = "redis"
     REDIS_PORT: str = "6379"
-    REDIS_DB: str = "0"
+    REDIS_DB: str = "1"
 
     @computed_field
     @property
@@ -50,6 +57,24 @@ class BaseConfig(BaseSettings):
     @property
     def REDIS_URL(self) -> str:
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
+    @computed_field
+    @property
+    def ENVIRONMENT(self) -> str:
+        return "development" if self.DEBUG else "production"
+
+    @computed_field
+    @property
+    def SENDER_EMAIL(self) -> str:
+        return f"noreply@{self.DOMAIN}"
+
+    @computed_field
+    @property
+    def FRONTEND_URLS(self) -> list[str]:
+        return [
+            f"http://{self.DOMAIN}",
+            f"https://{self.DOMAIN}",
+        ]
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / "deploy" / ".env",

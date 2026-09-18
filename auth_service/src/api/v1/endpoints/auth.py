@@ -13,7 +13,7 @@ from src.api.dependencies import (
 )
 from src.models import UserORM
 from src.schemas.common import SuccessResponse
-from src.schemas.login import LoginRequest
+from src.schemas.login import LoginRequest, SessionsListResponse
 from src.use_cases import AuthCases, SessionCases
 
 router = APIRouter(tags=["Auth v1"])
@@ -131,3 +131,27 @@ async def revoke_session(
     """
     await session_cases.revoke_session_by_id(session_id=session_id, user_id=user.id)
     return SuccessResponse()
+
+
+@router.get(
+    "/me/sessions", status_code=status.HTTP_200_OK, response_model=SessionsListResponse
+)
+async def get_active_sessions(
+    current_session_id: uuid.UUID = Depends(get_access_session_id),
+    user: UserORM = Depends(get_user_from_access_token),
+    session_cases: SessionCases = Depends(get_session_cases),
+) -> SessionsListResponse:
+    """Возвращает список всех активных сессий текущего пользователя.
+
+    Args:
+        current_session_id: Идентификатор текущей активной сессии из токена доступа.
+        user: Экземпляр аутентифицированного пользователя.
+        session_cases: Сценарий (Use Case) управления сессиями.
+
+    Returns:
+        SessionsListResponse: Список активных сессий с отметкой текущей.
+    """
+    sessions = await session_cases.all_active_sessions(
+        currents_session_id=current_session_id, user_id=user.id
+    )
+    return SessionsListResponse(sessions=sessions)

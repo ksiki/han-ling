@@ -2,7 +2,7 @@ import uuid
 
 from src.core.exceptions import SessionInvalidException
 from src.db.unit_of_work import UnitOfWork
-from src.schemas.users import SessionItemResponse
+from src.schemas.login import SessionItemResponse
 
 
 class SessionCases:
