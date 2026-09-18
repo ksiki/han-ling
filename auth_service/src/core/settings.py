@@ -12,10 +12,6 @@ class Config(BaseConfig):
         alias="AUTH_SERVICE_POSTGRES_DB",
         default="auth_service_db",
     )
-    REDIS_DB: str = Field(
-        alias="AUTH_SERVICE_REDIS_DB",
-        default="0",
-    )
 
     # ---------------------------------------------
     # Токены
@@ -43,7 +39,7 @@ class Config(BaseConfig):
     MAX_OTP_ATTEMPTS: int = 5
 
     # ---------------------------------------------
-    # OTP
+    # OAuth
     # ---------------------------------------------
     GOOGLE_CLIENT_ID: str = "google_client_id"
 
