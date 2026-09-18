@@ -3,7 +3,7 @@ DC = docker compose -f $(DC_FILE)
 AUTH_DIR = auth_service
 MESSAGE ?= "migration"
 
-.PHONY: up down restart build logs ps auth-upgrade auth-revision auth-downgrade auth-logs auth-test db-logs db-shell redis-cli pre-commit setup mypy check
+.PHONY: up down restart build logs ps auth-upgrade auth-revision auth-downgrade auth-logs auth-test db-up db-logs db-shell redis-cli pre-commit setup mypy check
 
 up:
 	$(DC) up -d
@@ -23,19 +23,22 @@ ps:
 	$(DC) ps
 
 auth-upgrade:
-	cd $(AUTH_DIR) && poetry run alembic upgrade head
+	cd $(AUTH_DIR) && POSTGRES_HOST=localhost poetry run alembic upgrade head
 
 auth-revision:
-	cd $(AUTH_DIR) && poetry run alembic revision --autogenerate -m "$(MESSAGE)"
+	cd $(AUTH_DIR) && POSTGRES_HOST=localhost poetry run alembic revision --autogenerate -m "$(MESSAGE)"
 
 auth-downgrade:
-	cd $(AUTH_DIR) && poetry run alembic downgrade -1
+	cd $(AUTH_DIR) && POSTGRES_HOST=localhost poetry run alembic downgrade -1
 
 auth-logs:
 	$(DC) logs -f auth_service
 
 auth-test:
 	cd $(AUTH_DIR) && poetry run pytest --cov=src --cov-report=html
+
+db-up:
+	$(DC) up -d database
 
 db-logs:
 	$(DC) logs -f database
