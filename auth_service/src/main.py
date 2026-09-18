@@ -2,22 +2,43 @@ import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+import sentry_sdk
+import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
 from shared.http_handlers import init_exception_handlers
 
 from src.api.system import router as system_router
 from src.api.v1.router import router as v1_router
 from src.core.http import http_client
+from src.core.logger import setup_logging
 from src.core.settings import config
+from src.core.telemetry import setup_telemetry
 from src.db import async_engine
 from src.redis.client import close_redis, init_redis
 
 log_level = logging.INFO if config.DEBUG else logging.WARNING
-logging.basicConfig(
-    level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+setup_logging(log_level)
+logger = structlog.get_logger(__name__)
+
+
+if config.SENTRY_DSN:
+    sentry_logging = LoggingIntegration(level=logging.INFO, event_level=logging.ERROR)
+    sentry_sdk.init(
+        dsn=config.SENTRY_DSN,
+        environment=config.ENVIRONMENT,
+        traces_sample_rate=config.SENTRY_TRACES_SAMPLE_RATE,
+        send_default_pii=False,
+        integrations=[
+            sentry_logging,
+            FastApiIntegration(
+                transaction_style="url",
+                failed_request_status_codes={403, *range(500, 600)},
+            ),
+        ],
+    )
 
 
 @asynccontextmanager
@@ -60,6 +81,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+setup_telemetry(app)
 
 init_exception_handlers(app=app)
 

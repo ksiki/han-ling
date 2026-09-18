@@ -48,26 +48,6 @@ services:
     networks:
       - local_network
 
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: mailhog
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8025:8025"
-      - "127.0.0.1:1025:1025"
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8025/"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - local_network
-
   # ---------------------------------------------
   # Auth Service
   # ---------------------------------------------
@@ -119,6 +99,52 @@ services:
     networks:
       - local_network
 
+  # ---------------------------------------------
+  # Observability Agent
+  # ---------------------------------------------
+  # alloy:
+  #   image: grafana/alloy:latest
+  #   container_name: alloy
+  #   restart: unless-stopped
+  #   command:
+  #     - run
+  #     - /etc/alloy/config.alloy
+  #     - --storage.path=/var/lib/alloy/data
+  #   ports:
+  #     - "127.0.0.1:12345:12345"
+  #   volumes:
+  #     - ./config.alloy:/etc/alloy/config.alloy:ro
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - /proc:/host/proc:ro
+  #     - /sys:/host/sys:ro
+  #     - /:/host/root:ro
+  #   environment:
+  #     - ALLOY_ENV=production
+  #   networks:
+  #   - local_network
+
+  # ---------------------------------------------
+  # Development
+  # ---------------------------------------------
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:1025:1025"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8025/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - local_network
 
 volumes:
   pg_data:
