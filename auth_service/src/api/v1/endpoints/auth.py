@@ -134,7 +134,7 @@ async def revoke_session(
 
 
 @router.get(
-    "/me/sessions", status_code=status.HTTP_200_OK, response_model=SessionsListResponse
+    "/sessions", status_code=status.HTTP_200_OK, response_model=SessionsListResponse
 )
 async def get_active_sessions(
     current_session_id: uuid.UUID = Depends(get_access_session_id),

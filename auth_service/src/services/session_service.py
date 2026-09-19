@@ -3,7 +3,7 @@ import uuid
 
 import jwt
 
-from src.core.exceptions import UserBannedOrDeletedException, UserNotFoundException
+from src.core.exceptions import UserBannedOrDeletedException
 from src.core.settings import config
 from src.db import UnitOfWork
 from src.models import UserORM, UserSessionORM
@@ -17,21 +17,6 @@ class SessionService:
             uow: Экземпляр Unit of Work для управления транзакциями и доступа к репозиториям.
         """
         self._uow = uow
-
-    async def _check_user(self, user: UserORM | None) -> None:
-        """Проверяет существование и валидность пользователя.
-
-        Args:
-            user: Экземпляр пользователя или None.
-
-        Raises:
-            UserNotFoundException: Если пользователь не найден (передан None).
-            UserBannedOrDeletedException: Если пользователь деактивирован или помечен как удаленный.
-        """
-        if not user:
-            raise UserNotFoundException
-        if not user.is_valid:
-            raise UserBannedOrDeletedException
 
     def _create_refresh_token(
         self, user_id: uuid.UUID
@@ -103,9 +88,10 @@ class SessionService:
             tuple[str, str]: Пара токенов (access_token, refresh_token).
 
         Raises:
-            UserNotFoundException: Если пользователь с указанным идентификатором не найден.
+            UserBannedOrDeletedException: Если пользователь забанен или неактивен.
         """
-        await self._check_user(user=user)
+        if not user.is_valid:
+            raise UserBannedOrDeletedException
 
         active_sessions = await self._uow.user_session.all_active_sessions(
             user_id=user.id
