@@ -1,5 +1,3 @@
-from unittest.mock import AsyncMock, MagicMock
-
 import pytest
 
 from src.services import (
@@ -10,26 +8,6 @@ from src.services import (
     RegistrationService,
     SessionService,
 )
-
-
-@pytest.fixture
-def mock_uow() -> MagicMock:
-    """Создает мок для UnitOfWork с замоканными репозиториями."""
-    uow = MagicMock()
-    uow.flush = AsyncMock()
-    uow.user.add = AsyncMock()
-    uow.user.get_by_email = AsyncMock()
-    uow.user_provider.add = AsyncMock()
-    uow.user_provider.get_or_none = AsyncMock()
-    uow.user_session.add = AsyncMock()
-    uow.user_session.all_active_sessions = AsyncMock()
-    return uow
-
-
-@pytest.fixture
-def mock_redis() -> AsyncMock:
-    redis = AsyncMock()
-    return redis
 
 
 @pytest.fixture

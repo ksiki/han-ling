@@ -17,6 +17,7 @@ async def test_create_session_success_no_revoke(
     mock_user.id = user_id
     mock_user.is_valid = True
     mock_user.role.value = "user"
+    mock_user.nickname = "user_123"
 
     mock_config.MAX_ACTIVE_SESSIONS = 5
 
@@ -53,7 +54,10 @@ async def test_create_session_success_no_revoke(
     mock_uow.flush.assert_called_once()
 
     session_service.create_access_token.assert_called_once_with(
-        user_id=user_id, session_id=mock_new_session.id, user_role="user"
+        user_id=user_id,
+        session_id=mock_new_session.id,
+        user_role="user",
+        user_nickname="user_123",
     )
 
 
@@ -66,6 +70,7 @@ async def test_create_session_success_with_revoke(
     mock_user.id = user_id
     mock_user.is_valid = True
     mock_user.role.value = "admin"
+    mock_user.nickname = "user_admin"
 
     # У пользователя 3 активные сессии (равно лимиту).
     # При добавлении новой, 1 старая должна быть отозвана (3 - 3 + 1 = 1).

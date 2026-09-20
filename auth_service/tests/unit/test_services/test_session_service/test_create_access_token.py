@@ -10,13 +10,17 @@ def test_create_access_token_success(session_service, mock_config, mocker):
     user_id = uuid.uuid4()
     session_id = uuid.uuid4()
     user_role = "admin"
+    user_nickname = "user_123"
 
     mock_jwt_encode = mocker.patch(
         "src.services.session_service.jwt.encode", return_value="mocked.access.token"
     )
 
     token = session_service.create_access_token(
-        user_id=user_id, session_id=session_id, user_role=user_role
+        user_id=user_id,
+        session_id=session_id,
+        user_role=user_role,
+        user_nickname=user_nickname,
     )
 
     assert token == "mocked.access.token"
@@ -30,6 +34,7 @@ def test_create_access_token_success(session_service, mock_config, mocker):
     assert payload["sub"] == str(user_id)
     assert payload["session_id"] == str(session_id)
     assert payload["role"] == user_role
+    assert payload["nickname"] == user_nickname
     assert payload["type"] == "access"
 
     assert isinstance(payload["exp"], datetime.datetime)
@@ -46,7 +51,10 @@ def test_create_access_token_encoding_error(session_service, mock_config, mocker
 
     with pytest.raises(jwt.PyJWTError) as exc_info:
         session_service.create_access_token(
-            user_id=uuid.uuid4(), session_id=uuid.uuid4(), user_role="user"
+            user_id=uuid.uuid4(),
+            session_id=uuid.uuid4(),
+            user_role="user",
+            user_nickname="user_123",
         )
 
     assert str(exc_info.value) == "Access token encoding failed"
