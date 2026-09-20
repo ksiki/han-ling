@@ -46,7 +46,11 @@ class SessionService:
         return token, jti, expire
 
     def create_access_token(
-        self, user_id: uuid.UUID, session_id: uuid.UUID, user_role: str
+        self,
+        user_id: uuid.UUID,
+        session_id: uuid.UUID,
+        user_role: str,
+        user_nickname: str,
     ) -> str:
         """Создает JWT access токен с привязкой к сессии и роли пользователя.
 
@@ -66,6 +70,7 @@ class SessionService:
             "jti": str(jti),
             "session_id": str(session_id),
             "role": user_role,
+            "nickname": user_nickname,
             "exp": expire,
             "type": "access",
         }
@@ -118,6 +123,9 @@ class SessionService:
         await self._uow.flush()
 
         access_token = self.create_access_token(
-            user_id=user.id, session_id=session.id, user_role=user.role.value
+            user_id=user.id,
+            session_id=session.id,
+            user_role=user.role.value,
+            user_nickname=user.nickname,
         )
         return access_token, refresh_token

@@ -38,6 +38,17 @@ class UserSessionRepository(SQLAclchemyRepository[UserSessionORM]):
         return list(result.scalars().all())
 
     async def get_by_jti(self, jti: uuid.UUID) -> UserSessionORM:
+        """Получает сессию пользователя по уникальному идентификатору токена (jti).
+
+        Args:
+            jti: Уникальный идентификатор JWT refresh-токена.
+
+        Returns:
+            UserSessionORM: Экземпляр найденной сессии пользователя.
+
+        Raises:
+            InvalidTokenException: Если сессия с указанным jti не найдена.
+        """
         session = await self.get_or_none(refresh_token_jti=str(jti))
         if not session:
             raise InvalidTokenException
