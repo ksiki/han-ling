@@ -9,6 +9,7 @@ async def test_update_access_token_success(auth_cases, mock_uow):
     """Тест: Успешное обновление access токена по валидному jti сессии."""
     user_id = uuid.uuid4()
     user_role = "user"
+    user_nickname = "user_123"
     refresh_jti = uuid.uuid4()
 
     mock_session = MagicMock()
@@ -19,13 +20,19 @@ async def test_update_access_token_success(auth_cases, mock_uow):
     )
 
     result = await auth_cases.update_access_token(
-        user_id=user_id, user_role=user_role, refresh_jti=refresh_jti
+        user_id=user_id,
+        user_role=user_role,
+        refresh_jti=refresh_jti,
+        user_nickname=user_nickname,
     )
 
     assert result == "new_access_token"
     mock_uow.user_session.get_by_jti.assert_called_once_with(jti=refresh_jti)
     auth_cases._session_service.create_access_token.assert_called_once_with(
-        user_id=user_id, session_id=mock_session.id, user_role=user_role
+        user_id=user_id,
+        session_id=mock_session.id,
+        user_role=user_role,
+        user_nickname=user_nickname,
     )
 
 
@@ -33,6 +40,7 @@ async def test_update_access_token_session_not_found(auth_cases, mock_uow):
     """Тест: Провал при отсутствии сессии с переданным jti в базе данных."""
     user_id = uuid.uuid4()
     user_role = "user"
+    user_nickname = "user_123"
     refresh_jti = uuid.uuid4()
 
     mock_uow.user_session.get_by_jti = AsyncMock(side_effect=InvalidTokenException)
@@ -40,7 +48,10 @@ async def test_update_access_token_session_not_found(auth_cases, mock_uow):
 
     with pytest.raises(InvalidTokenException):
         await auth_cases.update_access_token(
-            user_id=user_id, user_role=user_role, refresh_jti=refresh_jti
+            user_id=user_id,
+            user_role=user_role,
+            refresh_jti=refresh_jti,
+            user_nickname=user_nickname,
         )
 
     mock_uow.user_session.get_by_jti.assert_called_once_with(jti=refresh_jti)

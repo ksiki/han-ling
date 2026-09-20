@@ -50,13 +50,18 @@ class AuthCases:
         return tokens
 
     async def update_access_token(
-        self, user_id: uuid.UUID, user_role: str, refresh_jti: uuid.UUID
+        self,
+        user_id: uuid.UUID,
+        user_role: str,
+        user_nickname: str,
+        refresh_jti: uuid.UUID,
     ) -> str:
         """Создает новый access-токен на основе активной сессии, связанной с refresh-токеном.
 
         Args:
             user_id: Идентификатор пользователя.
             user_role: Строковое представление роли пользователя.
+            user_nickname: Никнейм пользователя для включения в access-токен.
             refresh_jti: Уникальный идентификатор (jti) связанного refresh-токена.
 
         Returns:
@@ -67,5 +72,8 @@ class AuthCases:
         """
         session = await self._uow.user_session.get_by_jti(jti=refresh_jti)
         return self._session_service.create_access_token(
-            user_id=user_id, session_id=session.id, user_role=user_role
+            user_id=user_id,
+            session_id=session.id,
+            user_role=user_role,
+            user_nickname=user_nickname,
         )

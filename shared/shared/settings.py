@@ -39,7 +39,7 @@ class BaseConfig(BaseSettings):
     # ---------------------------------------------
     POSTGRES_USER: str = "admin"
     POSTGRES_PASSWORD: str = "admin"
-    POSTGRES_DB: str = "postgre"
+    POSTGRES_DB: str = "postgres"
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: str = "5432"
     POSTGRES_DRIVER: str = "asyncpg"

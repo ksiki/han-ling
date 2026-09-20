@@ -78,7 +78,10 @@ async def refresh_access_token(
         SuccessResponse: Подтверждение успешного обновления токена.
     """
     access_token = await auth_cases.update_access_token(
-        user_id=user.id, user_role=user.role.value, refresh_jti=refresh_jti
+        user_id=user.id,
+        user_role=user.role.value,
+        user_nickname=user.nickname,
+        refresh_jti=refresh_jti,
     )
     refresh_access_cookies(response=response, access_token=access_token)
     return SuccessResponse()
