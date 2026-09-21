@@ -49,6 +49,85 @@ services:
       - local_network
 
   # ---------------------------------------------
+  # S3 Storage
+  # ---------------------------------------------
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-supersecret}
+      MINIO_SERVER_URL: "https://hanling.local/s3"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - local_network
+
+  minio_setup:
+    image: quay.io/minio/mc:latest
+    container_name: minio_setup
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-supersecret}
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Connecting to MinIO...';
+      mc alias set myminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
+      echo 'Creating bucket...';
+      mc mb myminio/temp-files --ignore-existing;
+      echo 'Setup completed successfully. Exiting.';
+      exit 0;
+      "
+    networks:
+      - local_network
+
+  # ---------------------------------------------
+  # Message Broker
+  # ---------------------------------------------
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - local_network
+
+  # ---------------------------------------------
   # Auth Service
   # ---------------------------------------------
   auth_service:
@@ -67,8 +146,26 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      mailhog:
-        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - local_network
+
+  # ---------------------------------------------
+  # Ftontend
+  # ---------------------------------------------
+  frontend:
+    image: node:24-alpine
+    container_name: frontend
+    restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
     logging:
       driver: "json-file"
       options:
@@ -102,64 +199,43 @@ services:
   # ---------------------------------------------
   # Observability Agent
   # ---------------------------------------------
-  alloy:
-    image: grafana/alloy:latest
-    container_name: alloy
-    restart: unless-stopped
-    privileged: true
-    command:
-      - run
-      - /etc/alloy/config.alloy
-      - --storage.path=/var/lib/alloy/data
-      - --cluster.enabled=false
-    ports:
-      - "127.0.0.1:12345:12345"
-    env_file: .env
-    volumes:
-      - ./config.alloy:/etc/alloy/config.alloy:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /run/containerd/containerd.sock:/run/containerd/containerd.sock:ro
-      - /:/rootfs:ro
-      - /sys:/sys:ro
-      - /var/lib/docker:/var/lib/docker:ro
-    environment:
-      - ALLOY_ENV=production
-      - GOMEMLIMIT=80MiB
-    deploy:
-      resources:
-        limits:
-          memory: 100M
-    networks:
-    - local_network
-
-  # ---------------------------------------------
-  # Development
-  # ---------------------------------------------
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: mailhog
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8025:8025"
-      - "127.0.0.1:1025:1025"
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8025/"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - local_network
+  # alloy:
+  #   image: grafana/alloy:latest
+  #   container_name: alloy
+  #   restart: unless-stopped
+  #   privileged: true
+  #   command:
+  #     - run
+  #     - /etc/alloy/config.alloy
+  #     - --storage.path=/var/lib/alloy/data
+  #     - --cluster.enabled=false
+  #   ports:
+  #     - "127.0.0.1:12345:12345"
+  #   env_file: .env
+  #   volumes:
+  #     - ./config.alloy:/etc/alloy/config.alloy:ro
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - /run/containerd/containerd.sock:/run/containerd/containerd.sock:ro
+  #     - /:/rootfs:ro
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker:/var/lib/docker:ro
+  #   environment:
+  #     - ALLOY_ENV=production
+  #     - GOMEMLIMIT=80MiB
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 100M
+  #   networks:
+  #   - local_network
 
 volumes:
   pg_data:
   redis_data:
   caddy_data:
   caddy_config:
+  minio_data:
+  rabbitmq_data:
 
 networks:
   local_network:
