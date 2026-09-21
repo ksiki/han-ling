@@ -1,14 +1,18 @@
 import logging
 import sys
+from collections.abc import MutableMapping
 from typing import Any
 
 import structlog
 from opentelemetry import trace
+from structlog.typing import Processor
 
 
 def add_open_telemetry_spans(
-    logger: logging.Logger, method_name: str, event_dict: dict[str, Any]
-) -> dict[str, Any]:
+    logger: Any,
+    method_name: str,
+    event_dict: MutableMapping[str, Any],
+) -> MutableMapping[str, Any]:
     """Добавляет контекст OpenTelemetry (trace_id, span_id) в каждый лог."""
 
     span = trace.get_current_span()
@@ -25,7 +29,7 @@ def add_open_telemetry_spans(
 def setup_logging(log_level: int = logging.INFO) -> None:
     """Настройка structlog и маршрутизация стандартного логгера Python."""
 
-    shared_processors = [
+    shared_processors: list[Processor] = [
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
