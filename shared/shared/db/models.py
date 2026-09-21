@@ -3,17 +3,15 @@ import datetime
 from sqlalchemy import DateTime, text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from .types import created_at_type
+
 
 class TimestampMixin:
     """
     Миксин для добавления временных меток во все модели
     """
 
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.datetime.now(datetime.UTC),
-        server_default=text("TIMEZONE('utc', now())"),
-    )
+    created_at: Mapped[created_at_type]
     updated_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.datetime.now(datetime.UTC),
@@ -22,7 +20,7 @@ class TimestampMixin:
     )
 
 
-class ReprMexin:
+class ReprMixin:
     """
     Миксин для удобного строкового представления
     """
