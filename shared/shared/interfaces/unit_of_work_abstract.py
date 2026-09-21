@@ -3,6 +3,8 @@ from typing import Self
 
 
 class UnitOfWorkAbstract(ABC):
+    """Абстрактный класс Unit of Work (Паттерн Единица Работы)."""
+
     async def __aenter__(self) -> Self:
         """Входит в асинхронный контекстный менеджер.
 
@@ -11,19 +13,20 @@ class UnitOfWorkAbstract(ABC):
         """
         return self
 
-    async def __aexit__(self, exc_type, exc, tb) -> None:
-        """Выходит из асинхронного контекстного менеджера с автоматическим откатом.
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Выходит из асинхронного контекстного менеджера с автоматическим откатом при ошибке.
 
         Args:
             exc_type: Тип возникшего исключения или None, если исключений не было.
-            exc: Экземпляр возникшего исключения или None.
-            tb: Объект трассировки стека (traceback) или None.
+            exc_val: Экземпляр возникшего исключения или None.
+            exc_tb: Объект трассировки стека (traceback) или None.
         """
-        await self.rollback()
+        if exc_type is not None:
+            await self.rollback()
 
     @abstractmethod
     async def commit(self) -> None:
-        """Фиксирует текущую транзакцию и сохраняет все изменения в хранилище.
+        """Фиксирует все изменения текущей транзакции.
 
         Raises:
             NotImplementedError: Если метод не реализован в подклассе.
@@ -32,7 +35,7 @@ class UnitOfWorkAbstract(ABC):
 
     @abstractmethod
     async def rollback(self) -> None:
-        """Откатывает текущую транзакцию и отменяет несохраненные изменения.
+        """Откатывает все изменения текущей транзакции.
 
         Raises:
             NotImplementedError: Если метод не реализован в подклассе.
@@ -41,7 +44,7 @@ class UnitOfWorkAbstract(ABC):
 
     @abstractmethod
     async def flush(self) -> None:
-        """Сбрасывает накопившиеся изменения сессии в базу данных без фиксации транзакции.
+        """Сбрасывает накопившиеся изменения в базу данных без фиксации транзакции.
 
         Raises:
             NotImplementedError: Если метод не реализован в подклассе.
