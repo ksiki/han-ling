@@ -1,8 +1,8 @@
 from typing import Any, ClassVar
 
+from shared.db.base import BaseORM
 from shared.db.models import ReprMixin, TimestampMixin
 from sqlalchemy.dialects.postgresql import ENUM
-from sqlalchemy.orm import DeclarativeBase
 
 from src.models.types.enums import ProviderEnum, RoleEnum
 
@@ -19,7 +19,9 @@ role_enum_type = ENUM(
 )
 
 
-class BaseORM(DeclarativeBase, TimestampMixin, ReprMixin):
+class AuthServiceBaseORM(BaseORM, TimestampMixin, ReprMixin):
+    __abstract__ = True
+
     type_annotation_map: ClassVar[dict[Any, Any]] = {
         ProviderEnum: provider_enum_type,
         RoleEnum: role_enum_type,

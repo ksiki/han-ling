@@ -5,8 +5,7 @@ from shared.db.types import uuid_pk
 from sqlalchemy import CheckConstraint, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base.base_orm import BaseORM
-
+from .base import AuthServiceBaseORM
 from .types.types import user_role
 
 
@@ -14,7 +13,7 @@ def _generate_default_nickname() -> str:
     return f"user_{secrets.token_urlsafe(6)}"
 
 
-class UserORM(BaseORM):
+class UserORM(AuthServiceBaseORM):
     __tablename__ = "users"
 
     id: Mapped[uuid_pk]

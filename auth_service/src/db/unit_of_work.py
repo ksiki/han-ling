@@ -1,6 +1,7 @@
 from typing import Self
 
 from shared.db import SQLAlchemyBaseUnitOfWork
+from shared.db.outbox import OutboxMessageRepository
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.db.repositories import (
@@ -17,6 +18,7 @@ class UnitOfWork(SQLAlchemyBaseUnitOfWork):
         user: Репозиторий для работы с сущностями пользователей.
         user_session: Репозиторий для работы с сессиями пользователей.
         user_provider: Репозиторий для работы с внешними OAuth-провайдерами.
+        outbox: Репозиторий для работы с событиями.
     """
 
     def __init__(self, session_maker: async_sessionmaker[AsyncSession]) -> None:
@@ -30,6 +32,7 @@ class UnitOfWork(SQLAlchemyBaseUnitOfWork):
         self.user: UserRepository
         self.user_session: UserSessionRepository
         self.user_provider: UserProviderRepository
+        self.outbox: OutboxMessageRepository
 
     async def __aenter__(self) -> Self:
         """Создает новую асинхронную сессию и инициализирует репозитории.
@@ -42,5 +45,6 @@ class UnitOfWork(SQLAlchemyBaseUnitOfWork):
         self.user = UserRepository(session=self._session)
         self.user_session = UserSessionRepository(session=self._session)
         self.user_provider = UserProviderRepository(session=self._session)
+        self.outbox = OutboxMessageRepository(session=self._session)
 
         return self

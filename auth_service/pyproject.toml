@@ -33,6 +33,7 @@ dependencies = [
     "opentelemetry-instrumentation-redis (>=0.65b0,<0.66)",
     "structlog (>=26.1.0,<27.0.0)",
     "alembic-postgresql-enum (>=1.10.0,<2.0.0)",
+    "faststream[rabbit] (>=0.7.6,<0.8.0)",
 ]
 
 

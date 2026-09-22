@@ -34,7 +34,7 @@ class AuthService:
         if password is None:
             return user
 
-        if not verify_password(
+        if user.password_hash and not verify_password(
             plain_password=password, hashed_password=user.password_hash
         ):
             raise PasswordOrEmailInvalidException

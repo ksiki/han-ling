@@ -2,12 +2,11 @@ from shared.db.types import uuid_pk
 from sqlalchemy import ForeignKey, Index, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base.base_orm import BaseORM
-
+from .base import AuthServiceBaseORM
 from .types.types import provider_type
 
 
-class UserProviderORM(BaseORM):
+class UserProviderORM(AuthServiceBaseORM):
     __tablename__ = "user_providers"
 
     id: Mapped[uuid_pk]

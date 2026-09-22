@@ -1,5 +1,7 @@
 import uuid
 
+from shared.contracts import UserUpdateEvent
+from shared.db.outbox import OutboxMessageORM
 from sqlalchemy.exc import IntegrityError
 
 from src.core.exceptions import NicknameInvalidException
@@ -27,6 +29,16 @@ class ProfileCases:
         """
         user = await self._uow.user.get(id=user_id)
         user.nickname = new_nickname
+
+        event = UserUpdateEvent(
+            user_id=user.id, nickname=user.nickname, role=user.role.value
+        )
+        outbox_message = OutboxMessageORM(
+            exchange="auth.events",
+            routing_key="user.updated",
+            payload=event.model_dump(mode="json"),
+        )
+        await self._uow.outbox.add(outbox_message)
 
         try:
             await self._uow.flush()

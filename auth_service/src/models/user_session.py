@@ -4,10 +4,10 @@ from shared.db.types import uuid_pk
 from sqlalchemy import DateTime, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base.base_orm import BaseORM
+from .base import AuthServiceBaseORM
 
 
-class UserSessionORM(BaseORM):
+class UserSessionORM(AuthServiceBaseORM):
     __tablename__ = "user_sessions"
 
     id: Mapped[uuid_pk]
