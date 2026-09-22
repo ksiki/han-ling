@@ -44,6 +44,11 @@ class BaseConfig(BaseSettings):
     POSTGRES_PORT: str = "5432"
     POSTGRES_DRIVER: str = "asyncpg"
 
+    RABBIT_USER: str = "guest"
+    RABBIT_PASSWORD: str = "guest"
+    RABBIT_HOST: str = "localhost"
+    RABBIT_PORT: str = "5672"
+
     REDIS_HOST: str = "redis"
     REDIS_PORT: str = "6379"
     REDIS_DB: str = "1"
@@ -57,6 +62,11 @@ class BaseConfig(BaseSettings):
     @property
     def REDIS_URL(self) -> str:
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
+    @computed_field
+    @property
+    def RABBIT_URL(self) -> str:
+        return f"amqp://{self.RABBIT_USER}:{self.RABBIT_PASSWORD}:{self.RABBIT_PORT}/{self.RABBIT_HOST}"
 
     @computed_field
     @property
