@@ -33,7 +33,7 @@ class UserORM(BaseORM):
     role: Mapped[RoleEnum] = mapped_column(
         ENUM(
             RoleEnum,
-            name="roleenum",
+            name="role_enum",
             values_callable=lambda obj: [e.value for e in obj],
         ),
         server_default=RoleEnum.USER.value,

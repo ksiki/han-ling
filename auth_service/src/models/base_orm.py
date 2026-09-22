@@ -1,6 +1,6 @@
-from shared.db.models import ReprMexin, TimestampMixin
+from shared.db.models import ReprMixin, TimestampMixin
 from sqlalchemy.orm import DeclarativeBase
 
 
-class BaseORM(DeclarativeBase, TimestampMixin, ReprMexin):
+class BaseORM(DeclarativeBase, TimestampMixin, ReprMixin):
     pass
