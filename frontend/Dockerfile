@@ -1,9 +1,32 @@
-# ---------------------------------------------
-# Builder Stage
-# ---------------------------------------------
-FROM node:24-alpine AS build
+# ==========================================
+# 1. Base Stage (Базовая настройка)
+# ==========================================
+FROM node:20-alpine AS base
+
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
+
+ENV HOST=0.0.0.0
+ENV PORT=3000
+
+# ==========================================
+# 2. Development Stage (Для локальной разработки)
+# ==========================================
+FROM base AS development
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+CMD ["npm", "run", "dev"]
+
+# ==========================================
+# 3. Builder Stage (Сборка для продакшена)
+# ==========================================
+FROM base AS builder
 
 COPY package*.json ./
 
@@ -13,15 +36,15 @@ COPY . .
 
 RUN npm run build
 
-# ---------------------------------------------
-# Final Stage
-# ---------------------------------------------
-FROM nginx:alpine
+# ==========================================
+# 4. Production Stage (Финальный минимальный образ)
+# ==========================================
+FROM base AS production
 
-COPY --from=build /app/dist /usr/share/nginx/html
+ENV NODE_ENV=production
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/.output /app/.output
 
-EXPOSE 80
+EXPOSE 3000
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["node", ".output/server/index.mjs"]
