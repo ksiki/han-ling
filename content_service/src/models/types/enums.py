@@ -18,3 +18,17 @@ class BookCharacterRoleEnum(enum.Enum):
     MAIN = "MAIN"
     SECONDARY = "SECONDARY"
     CAMEO = "CAMEO"
+
+
+class BookProcessingStatusEnum(enum.Enum):
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class BookPublicationStatusEnum(enum.Enum):
+    DRAFT = "DRAFT"
+    COMING_SOON = "COMING_SOON"
+    PUBLISHED = "PUBLISHED"
+    HIDDEN = "HIDDEN"

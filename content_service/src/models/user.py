@@ -12,15 +12,30 @@ from .base import BaseORM
 
 class UserORM(BaseORM, TimestampMixin):
     __tablename__ = "users"
+    __table_args__ = (
+        {
+            "comment": "Локальная изолированная копия профилей пользователей для Core Content Service"
+        },
+    )
 
-    id: Mapped[uuid_pk]
+    id: Mapped[uuid_pk] = mapped_column(
+        comment="Уникальный идентификатор пользователя (локальная изолированная копия для сервиса контента)"
+    )
 
     nickname: Mapped[str] = mapped_column(
-        String(length=25),
+        String(length=25), comment="Отображаемое имя пользователя на платформе"
     )
-    role: Mapped[user_role]
+
+    role: Mapped[user_role] = mapped_column(
+        comment="Уровень прав доступа пользователя (user / admin)"
+    )
+
     subscribe_exp: Mapped[datetime.datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True, server_default=None, default=None
+        DateTime(timezone=True),
+        nullable=True,
+        server_default=None,
+        default=None,
+        comment="Время окончания премиум-подписки (обновляется асинхронно через брокер сообщений Redis)",
     )
 
     @property

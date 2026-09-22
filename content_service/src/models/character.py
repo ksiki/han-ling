@@ -8,6 +8,16 @@ from .base import BaseORM
 
 class CharacterORM(BaseORM, TimestampMixin):
     __tablename__ = "characters"
+    __table_args__ = (
+        {
+            "comment": "Хранилище универсальных данных о персонажах (независимо от языка)"
+        },
+    )
 
-    id: Mapped[uuid_pk]
-    photo_url: Mapped[str] = mapped_column(String(length=256))
+    id: Mapped[uuid_pk] = mapped_column(comment="Уникальный идентификатор персонажа")
+
+    photo_url: Mapped[str | None] = mapped_column(
+        String(length=256),
+        nullable=True,
+        comment="URL-ссылка на аватар/изображение персонажа в S3",
+    )

@@ -5,6 +5,8 @@ from sqlalchemy.orm import mapped_column
 from .enums import (
     BookCharacterRoleEnum,
     BookCreatorRoleEnum,
+    BookProcessingStatusEnum,
+    BookPublicationStatusEnum,
     UserRoleEnum,
 )
 
@@ -23,5 +25,23 @@ user_role = Annotated[
     mapped_column(
         server_default=UserRoleEnum.USER.value,
         default=UserRoleEnum.USER,
+    ),
+]
+
+book_processing_status = Annotated[
+    BookProcessingStatusEnum,
+    mapped_column(
+        server_default=BookProcessingStatusEnum.PENDING.value,
+        default=BookProcessingStatusEnum.PENDING,
+        comment="Технический статус обработки книги (очередь, обработка, завершено)",
+    ),
+]
+
+book_publication_status = Annotated[
+    BookPublicationStatusEnum,
+    mapped_column(
+        server_default=BookPublicationStatusEnum.COMING_SOON.value,
+        default=BookPublicationStatusEnum.COMING_SOON,
+        comment="Статус видимости книги на сайте (черновик, скоро, опубликовано, скрыто)",
     ),
 ]

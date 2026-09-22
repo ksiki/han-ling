@@ -8,6 +8,16 @@ from .base import BaseORM
 
 class SeriesORM(BaseORM, TimestampMixin):
     __tablename__ = "series"
+    __table_args__ = (
+        {"comment": "Книжные серии и циклы, объединяющие несколько книг"},
+    )
 
-    id: Mapped[uuid_pk]
-    poster_url: Mapped[str] = mapped_column(String(length=256))
+    id: Mapped[uuid_pk] = mapped_column(
+        comment="Уникальный идентификатор книжной серии/цикла"
+    )
+
+    poster_url: Mapped[str | None] = mapped_column(
+        String(length=256),
+        nullable=True,
+        comment="URL-ссылка на обложку серии во внешнем хранилище S3",
+    )
