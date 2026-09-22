@@ -154,18 +154,20 @@ services:
     networks:
       - local_network
 
-  # ---------------------------------------------
-  # Ftontend
-  # ---------------------------------------------
-  frontend:
-    image: node:24-alpine
-    container_name: frontend
+  auth_outbox_relay:
+    image: docker.redpanda.com/redpandadata/connect:latest
+    container_name: auth_outbox_relay
     restart: unless-stopped
-    working_dir: /app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    env_file: .env
+    environment:
+      - TARGET_DB_NAME=${AUTH_SERVICE_POSTGRES_DB}
     volumes:
-      - ../frontend:/app
-      - /app/node_modules
+      - ./configs/outbox_relay.yaml:/connect.yaml:ro
+    depends_on:
+      database:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     logging:
       driver: "json-file"
       options:
@@ -173,6 +175,28 @@ services:
         max-file: "3"
     networks:
       - local_network
+
+  # ---------------------------------------------
+  # Frontend
+  # ---------------------------------------------
+  frontend:
+    build:
+      context: ../frontend
+      target: development
+    container_name: frontend
+    restart: unless-stopped
+    command: sh -c "npm install && npm run dev"
+    volumes:
+      - ../frontend:/app
+      - frontend_data:/app/data
+      - frontend_node_modules:/app/node_modules
+    networks:
+      - local_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ---------------------------------------------
   # Web Server
@@ -199,35 +223,35 @@ services:
   # ---------------------------------------------
   # Observability Agent
   # ---------------------------------------------
-  # alloy:
-  #   image: grafana/alloy:latest
-  #   container_name: alloy
-  #   restart: unless-stopped
-  #   privileged: true
-  #   command:
-  #     - run
-  #     - /etc/alloy/config.alloy
-  #     - --storage.path=/var/lib/alloy/data
-  #     - --cluster.enabled=false
-  #   ports:
-  #     - "127.0.0.1:12345:12345"
-  #   env_file: .env
-  #   volumes:
-  #     - ./config.alloy:/etc/alloy/config.alloy:ro
-  #     - /var/run/docker.sock:/var/run/docker.sock:ro
-  #     - /run/containerd/containerd.sock:/run/containerd/containerd.sock:ro
-  #     - /:/rootfs:ro
-  #     - /sys:/sys:ro
-  #     - /var/lib/docker:/var/lib/docker:ro
-  #   environment:
-  #     - ALLOY_ENV=production
-  #     - GOMEMLIMIT=80MiB
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         memory: 100M
-  #   networks:
-  #   - local_network
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    restart: unless-stopped
+    privileged: true
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+      - --cluster.enabled=false
+    ports:
+      - "127.0.0.1:12345:12345"
+    env_file: .env
+    volumes:
+      - ./configs/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /run/containerd/containerd.sock:/run/containerd/containerd.sock:ro
+      - /:/rootfs:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    environment:
+      - ALLOY_ENV=production
+      - GOMEMLIMIT=80MiB
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+    networks:
+    - local_network
 
 volumes:
   pg_data:
@@ -236,6 +260,8 @@ volumes:
   caddy_config:
   minio_data:
   rabbitmq_data:
+  frontend_data:
+  frontend_node_modules:
 
 networks:
   local_network:
