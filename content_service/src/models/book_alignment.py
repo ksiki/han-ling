@@ -6,10 +6,10 @@ from sqlalchemy import ForeignKey, Index, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class BookAlignmentORM(BaseORM, TimestampMixin):
+class BookAlignmentORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "book_alignments"
     __table_args__ = (
         UniqueConstraint(

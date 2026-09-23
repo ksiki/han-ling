@@ -1,8 +1,8 @@
 from typing import Any, ClassVar
 
+from shared.db.base import BaseORM
 from shared.db.models import ReprMixin
 from sqlalchemy.dialects.postgresql import ENUM
-from sqlalchemy.orm import DeclarativeBase
 
 from src.models.types.enums import (
     BookCharacterRoleEnum,
@@ -43,7 +43,9 @@ book_publication_status_enum_type = ENUM(
 )
 
 
-class BaseORM(DeclarativeBase, ReprMixin):
+class ContentServiceBaseORM(BaseORM, ReprMixin):
+    __abstract__ = True
+
     type_annotation_map: ClassVar[dict[Any, Any]] = {
         UserRoleEnum: user_rote_enum_type,
         BookCharacterRoleEnum: book_character_role_enum_type,

@@ -16,11 +16,11 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 from .types.types import book_processing_status, book_publication_status
 
 
-class BookORM(BaseORM, TimestampMixin):
+class BookORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "books"
     __table_args__ = (
         CheckConstraint(

@@ -1,5 +1,9 @@
+from shared.db.base import BaseORM
+from shared.db.outbox import OutboxMessageORM
+
 from .author import AuthorORM
 from .author_translation import AuthorTranslationORM
+from .base import ContentServiceBaseORM
 from .book import BookORM
 from .book_alignment import BookAlignmentORM
 from .book_character import BookCharacterORM
@@ -25,6 +29,7 @@ from .vocabulary_levels import VocabularyLevelORM
 __all__ = [
     "AuthorORM",
     "AuthorTranslationORM",
+    "BaseORM",
     "BookAlignmentORM",
     "BookCharacterORM",
     "BookContentORM",
@@ -36,8 +41,10 @@ __all__ = [
     "BookTranslationORM",
     "CharacterORM",
     "CharacterTranslationORM",
+    "ContentServiceBaseORM",
     "EditionChapterORM",
     "LanguageORM",
+    "OutboxMessageORM",
     "ReviewVoteORM",
     "SeriesORM",
     "SeriesTranslationORM",

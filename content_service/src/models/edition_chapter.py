@@ -5,10 +5,10 @@ from shared.db.types import uuid_pk
 from sqlalchemy import ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class EditionChapterORM(BaseORM, TimestampMixin):
+class EditionChapterORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "edition_chapters"
     __table_args__ = (
         Index("ix_edition_chapters_edition_sort", "edition_id", "sort_order"),

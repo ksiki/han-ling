@@ -5,10 +5,10 @@ from shared.db.types import uuid_pk
 from sqlalchemy import Date, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class AuthorORM(BaseORM, TimestampMixin):
+class AuthorORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "authors"
     __table_args__ = (
         {"comment": "Создатели контента (авторы, иллюстраторы, переводчики)"},

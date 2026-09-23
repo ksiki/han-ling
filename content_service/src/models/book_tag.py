@@ -2,10 +2,10 @@ from shared.db.types import uuid_pk
 from sqlalchemy import ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class BookTagORM(BaseORM):
+class BookTagORM(ContentServiceBaseORM):
     __tablename__ = "book_tags"
     __table_args__ = (
         Index("ix_book_tags_tag_id", "tag_id"),

@@ -3,10 +3,10 @@ from shared.db.types import uuid_pk
 from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class SeriesTranslationORM(BaseORM, TimestampMixin):
+class SeriesTranslationORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "series_translations"
     __table_args__ = (
         {

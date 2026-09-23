@@ -2,10 +2,10 @@ from shared.db.models import TimestampMixin
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class LanguageORM(BaseORM, TimestampMixin):
+class LanguageORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "languages"
     __table_args__ = (
         {"comment": "Справочник доступных языков (для интерфейса и текстов изданий)"},

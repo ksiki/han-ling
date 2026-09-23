@@ -11,10 +11,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class BookReviewORM(BaseORM):
+class BookReviewORM(ContentServiceBaseORM):
     __tablename__ = "book_reviews"
     __table_args__ = (
         CheckConstraint(

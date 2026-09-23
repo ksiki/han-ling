@@ -3,10 +3,10 @@ from shared.db.types import uuid_pk
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class SeriesORM(BaseORM, TimestampMixin):
+class SeriesORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "series"
     __table_args__ = (
         {"comment": "Книжные серии и циклы, объединяющие несколько книг"},

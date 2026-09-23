@@ -4,10 +4,10 @@ from shared.db.models import TimestampMixin
 from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class CharacterTranslationORM(BaseORM, TimestampMixin):
+class CharacterTranslationORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "character_translations"
     __table_args__ = (
         {"comment": "Локализация данных персонажа (перевод имени и истории/биографии)"},

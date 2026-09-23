@@ -1,5 +1,5 @@
-from base_orm import BaseORM
+from .content_service_base_orm import ContentServiceBaseORM
 
 __all__ = [
-    "BaseORM",
+    "ContentServiceBaseORM",
 ]

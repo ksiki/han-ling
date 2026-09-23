@@ -4,10 +4,10 @@ from shared.db.types import created_at_type
 from sqlalchemy import CheckConstraint, ForeignKey, Index, SmallInteger
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class ReviewVoteORM(BaseORM):
+class ReviewVoteORM(ContentServiceBaseORM):
     __tablename__ = "review_votes"
     __table_args__ = (
         CheckConstraint(

@@ -3,10 +3,10 @@ from shared.db.types import uuid_pk
 from sqlalchemy import ForeignKey, Index, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class VocabularyLevelORM(BaseORM, TimestampMixin):
+class VocabularyLevelORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "vocabulary_levels"
     __table_args__ = (
         UniqueConstraint(

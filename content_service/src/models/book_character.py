@@ -3,11 +3,11 @@ import uuid
 from sqlalchemy import ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 from .types.types import book_character_role
 
 
-class BookCharacterORM(BaseORM):
+class BookCharacterORM(ContentServiceBaseORM):
     __tablename__ = "book_characters"
     __table_args__ = (
         Index("ix_book_characters_character_id", "character_id"),

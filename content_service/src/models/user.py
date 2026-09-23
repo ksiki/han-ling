@@ -7,10 +7,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from src.models.types.types import user_role
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class UserORM(BaseORM, TimestampMixin):
+class UserORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "users"
     __table_args__ = (
         {

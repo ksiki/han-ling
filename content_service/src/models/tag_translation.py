@@ -3,10 +3,10 @@ from shared.db.types import uuid_pk
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class TagTranslationORM(BaseORM, TimestampMixin):
+class TagTranslationORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "tag_translations"
     __table_args__ = (
         {"comment": "Локализация названий тегов/жанров на языки интерфейса"},

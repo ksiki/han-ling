@@ -5,10 +5,10 @@ from shared.db.types import uuid_pk
 from sqlalchemy import ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class BookEditionORM(BaseORM, TimestampMixin):
+class BookEditionORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "book_editions"
     __table_args__ = (
         UniqueConstraint(

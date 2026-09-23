@@ -4,10 +4,10 @@ from shared.db.models import TimestampMixin
 from sqlalchemy import ARRAY, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class BookTranslationORM(BaseORM, TimestampMixin):
+class BookTranslationORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "book_translations"
     __table_args__ = (
         Index(

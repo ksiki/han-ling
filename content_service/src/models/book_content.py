@@ -6,10 +6,10 @@ from sqlalchemy import ForeignKey, Index
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class BookContentORM(BaseORM, TimestampMixin):
+class BookContentORM(ContentServiceBaseORM, TimestampMixin):
     __tablename__ = "book_contents"
     __table_args__ = (
         Index("ix_book_contents_content_gin", "content", postgresql_using="gin"),

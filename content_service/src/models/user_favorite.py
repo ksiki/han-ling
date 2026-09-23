@@ -4,10 +4,10 @@ from shared.db.types import created_at_type
 from sqlalchemy import ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseORM
+from .base import ContentServiceBaseORM
 
 
-class UserFavoriteORM(BaseORM):
+class UserFavoriteORM(ContentServiceBaseORM):
     __tablename__ = "user_favorites"
     __table_args__ = (
         Index("ix_user_favorites_book_id", "book_id"),
