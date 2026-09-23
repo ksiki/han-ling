@@ -16,6 +16,17 @@ dependencies = [
     "faststream[redis] (>=0.7.5,<0.8.0)",
     "pydantic-settings (>=2.15.0,<3.0.0)",
     "shared @ file:../shared",
+    "alembic-postgresql-enum (>=1.10.0,<2.0.0)",
+    "uuid6 (>=2025.0.1,<2026.0.0)",
+    "redis (>=8.1.0,<9.0.0)",
+    "sentry-sdk[fastapi,opentelemetry] (>=2.69.2,<3.0.0)",
+    "opentelemetry-api (>=1.44.0,<2.0.0)",
+    "opentelemetry-sdk (>=1.44.0,<2.0.0)",
+    "opentelemetry-exporter-otlp (>=1.44.0,<2.0.0)",
+    "opentelemetry-instrumentation-fastapi (>=0.65b0,<0.66)",
+    "opentelemetry-instrumentation-sqlalchemy (>=0.65b0,<0.66)",
+    "opentelemetry-instrumentation-redis (>=0.65b0,<0.66)",
+    "structlog (>=26.1.0,<27.0.0)",
 ]
 
 
@@ -29,12 +40,27 @@ pytest = "^9.1.1"
 pytest-asyncio = "^1.4.0"
 ruff = "^0.16.7"
 mypy = "^2.3.1"
-httpx = "^0.28.1"
+respx = "^0.23.1"
+pytest-mock = "^3.15.1"
+pytest-cov = "^7.1.0"
+fakeredis = "^2.38.0"
 
 
 [tool.poetry.dependencies]
 shared = {develop = true}
 
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends"]
+
+
+[tool.ruff.lint.per-file-ignores]
+"**/migrations/**" = ["E402"]
+
+
+[tool.mypy]
+exclude = ["^tests/"]

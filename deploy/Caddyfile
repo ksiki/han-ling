@@ -30,6 +30,11 @@ hanling.local {
         }
     }
 
+    handle /Content/* {
+        reverse_proxy content_service:8000 {
+        }
+    }
+
     handle /s3/* {
         uri strip_prefix /s3
         reverse_proxy minio:9000 {

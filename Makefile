@@ -1,9 +1,10 @@
 DC_FILE = deploy/docker-compose.yaml
 DC = docker compose -f $(DC_FILE)
 AUTH_DIR = auth_service
+CONTENT_DIR = content_service
 MESSAGE ?= "migration"
 
-.PHONY: up down restart build logs ps auth-upgrade auth-revision auth-downgrade auth-logs auth-test db-up db-logs db-shell redis-cli pre-commit setup mypy check
+.PHONY: up down restart build ps auth-upgrade auth-revision auth-downgrade auth-test content-upgrade content-revision content-downgrade content-test db-up pre-commit setup mypy check
 
 up:
 	$(DC) up -d
@@ -15,9 +16,6 @@ restart: down up
 
 build:
 	$(DC) build
-
-logs:
-	$(DC) logs -f
 
 ps:
 	$(DC) ps
@@ -31,23 +29,23 @@ auth-revision:
 auth-downgrade:
 	cd $(AUTH_DIR) && POSTGRES_HOST=localhost poetry run alembic downgrade -1
 
-auth-logs:
-	$(DC) logs -f auth_service
-
 auth-test:
 	cd $(AUTH_DIR) && poetry run pytest --cov=src --cov-report=html
 
+content-upgrade:
+	cd $(CONTENT_DIR) && POSTGRES_HOST=localhost poetry run alembic upgrade head
+
+content-revision:
+	cd $(CONTENT_DIR) && POSTGRES_HOST=localhost poetry run alembic revision --autogenerate -m "$(MESSAGE)"
+
+content-downgrade:
+	cd $(CONTENT_DIR) && POSTGRES_HOST=localhost poetry run alembic downgrade -1
+
+content-test:
+	cd $(CONTENT_DIR) && poetry run pytest --cov=src --cov-report=html
+
 db-up:
 	$(DC) up -d database
-
-db-logs:
-	$(DC) logs -f database
-
-db-shell:
-	$(DC) exec database sh -c 'psql -U $$POSTGRES_USER -d $$POSTGRES_DB'
-
-redis-cli:
-	$(DC) exec redis redis-cli
 
 pre-commit:
 	pre-commit run --all-files
@@ -60,3 +58,4 @@ check: pre-commit mypy
 setup:
 	pre-commit install
 	cd $(AUTH_DIR) && poetry install
+	cd $(CONTENT_DIR) && poetry install

@@ -49,6 +49,34 @@ services:
       - local_network
 
   # ---------------------------------------------
+  # Message Broker
+  # ---------------------------------------------
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - local_network
+
+  # ---------------------------------------------
   # S3 Storage
   # ---------------------------------------------
   minio:
@@ -100,34 +128,6 @@ services:
       - local_network
 
   # ---------------------------------------------
-  # Message Broker
-  # ---------------------------------------------
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: rabbitmq
-    restart: unless-stopped
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
-    ports:
-      - "127.0.0.1:5672:5672"
-      - "127.0.0.1:15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - local_network
-
-  # ---------------------------------------------
   # Auth Service
   # ---------------------------------------------
   auth_service:
@@ -145,6 +145,10 @@ services:
       database:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     logging:
       driver: "json-file"
@@ -166,7 +170,68 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - local_network
+
+  # ---------------------------------------------
+  # Content Service
+  # ---------------------------------------------
+  content_service:
+    build:
+      context: ../
+      dockerfile: content_service/Dockerfile
+    container_name: content_service
+    restart: unless-stopped
+    env_file: .env
+    command: python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ../content_service/src:/app/src
+      - ../shared:/shared
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - local_network
+
+  content_outbox_relay:
+    image: docker.redpanda.com/redpandadata/connect:latest
+    container_name: content_outbox_relay
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - TARGET_DB_NAME=${CONTENT_SERVICE_POSTGRES_DB}
+    volumes:
+      - ./configs/outbox_relay.yaml:/connect.yaml:ro
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     logging:
       driver: "json-file"
@@ -186,17 +251,34 @@ services:
     container_name: frontend
     restart: unless-stopped
     command: sh -c "npm install && npm run dev"
+    environment:
+        - NODE_OPTIONS=--max-old-space-size=128
+        - NUXT_REDIS_URL=redis://redis:6379/2
     volumes:
       - ../frontend:/app
       - frontend_data:/app/data
       - frontend_node_modules:/app/node_modules
-    networks:
-      - local_network
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+    networks:
+      - local_network
+
 
   # ---------------------------------------------
   # Web Server
@@ -212,6 +294,15 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     logging:
       driver: "json-file"
       options:
