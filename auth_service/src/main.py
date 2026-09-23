@@ -2,43 +2,22 @@ import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-import sentry_sdk
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.logging import LoggingIntegration
+from shared.deploy import setup_logging, setup_telemetry
 from shared.http_handlers import init_exception_handlers
 
 from src.api.system import router as system_router
 from src.api.v1.router import router as v1_router
 from src.core.http import http_client
-from src.core.logger import setup_logging
 from src.core.settings import config
-from src.core.telemetry import setup_telemetry
 from src.db import async_engine
 from src.redis.client import close_redis, init_redis
 
 log_level = logging.INFO if config.DEBUG else logging.WARNING
 setup_logging(log_level)
 logger = structlog.get_logger(__name__)
-
-
-if config.SENTRY_DSN:
-    sentry_logging = LoggingIntegration(level=logging.INFO, event_level=logging.ERROR)
-    sentry_sdk.init(
-        dsn=config.SENTRY_DSN,
-        environment=config.ENVIRONMENT,
-        traces_sample_rate=config.SENTRY_TRACES_SAMPLE_RATE,
-        send_default_pii=False,
-        integrations=[
-            sentry_logging,
-            FastApiIntegration(
-                transaction_style="url",
-                failed_request_status_codes={403, *range(500, 600)},
-            ),
-        ],
-    )
 
 
 @asynccontextmanager
@@ -54,18 +33,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Yields:
         None: Передает управление работающему приложению.
     """
-    logger.info("Запуск миксросевиса HanLing Auth...")
+    logger.info(f"Запуск миксросевиса {config.PRODUCT_NAME} Auth...")
     await init_redis()
     yield
     await http_client.aclose()
     await async_engine.dispose()
     await close_redis()
-    logger.info("Микросервис HanLing Auth выключен")
+    logger.info(f"Микросервис {config.PRODUCT_NAME} Auth выключен")
 
 
 app = FastAPI(
-    title="HanLing Auth",
-    description="Микросервис авторизации, регистрации и аутентификации для HanLing",
+    title=f"{config.PRODUCT_NAME} Auth",
+    description="Микросервис авторизации, регистрации и аутентификации",
     version="1.0.0",
     root_path="/auth",
     docs_url="/api/docs" if config.DEBUG else None,
@@ -82,7 +61,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-setup_telemetry(app)
+setup_telemetry(
+    app=app,
+    sentry_dsn=config.SENTRY_DSN,
+    sentry_traces_sample_rate=config.SENTRY_TRACES_SAMPLE_RATE,
+    environment=config.ENVIRONMENT,
+    otlp_endpoint=config.OTLP_ENDPOINT,
+    product_name=config.PRODUCT_NAME,
+    async_engine=async_engine,
+)
 
 init_exception_handlers(app=app)
 
