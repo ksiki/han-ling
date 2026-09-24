@@ -5,7 +5,6 @@ from shared.db.outbox import OutboxMessageRepository
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.db.repositories import (
-    UserProviderRepository,
     UserRepository,
     UserSessionRepository,
 )
@@ -31,7 +30,6 @@ class UnitOfWork(SQLAlchemyBaseUnitOfWork):
 
         self.user: UserRepository
         self.user_session: UserSessionRepository
-        self.user_provider: UserProviderRepository
         self.outbox: OutboxMessageRepository
 
     async def __aenter__(self) -> Self:
@@ -44,7 +42,6 @@ class UnitOfWork(SQLAlchemyBaseUnitOfWork):
 
         self.user = UserRepository(session=self._session)
         self.user_session = UserSessionRepository(session=self._session)
-        self.user_provider = UserProviderRepository(session=self._session)
         self.outbox = OutboxMessageRepository(session=self._session)
 
         return self

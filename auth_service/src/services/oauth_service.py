@@ -64,7 +64,7 @@ class OAuthService:
         Raises:
             ProviderLinkNotFoundException: Если связь с провайдером не найдена.
         """
-        provider_link = await self._uow.user_provider.get_or_none(
+        provider_link = await self._uow.repository(UserProviderORM).get_or_none(
             provider_id=provider_id, provider=type
         )
         if not provider_link:
@@ -87,6 +87,6 @@ class OAuthService:
         new_provider = UserProviderORM(
             user_id=user_id, provider_id=provider_id, provider=type
         )
-        await self._uow.user_provider.add(new_provider)
+        await self._uow.repository(UserProviderORM).add(new_provider)
         await self._uow.flush()
         return new_provider

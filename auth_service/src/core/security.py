@@ -81,7 +81,6 @@ async def verify_turnstile_token(
     Returns:
         bool: True, если токен успешно прошел валидацию, иначе False.
     """
-    # return True  # TODO: убрать
 
     if not token or not token.strip():
         return False

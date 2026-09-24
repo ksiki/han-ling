@@ -56,6 +56,9 @@ class UserORM(AuthServiceBaseORM):
         comment="Временная метка soft delete",
     )
 
+    # TODO: добавить настройки сайта
+    # site_settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+
     __table_args__ = (
         CheckConstraint(
             "nickname ~ '^[a-zA-Z0-9_ .-]+$'",
