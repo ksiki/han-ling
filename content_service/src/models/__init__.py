@@ -23,6 +23,7 @@ from .series_translation import SeriesTranslationORM
 from .tag import TagORM
 from .tag_translation import TagTranslationORM
 from .user import UserORM
+from .user_dictionary_entrie import UserDictionaryEntrieORM
 from .user_favorite import UserFavoriteORM
 from .vocabulary_levels import VocabularyLevelORM
 
@@ -50,6 +51,7 @@ __all__ = [
     "SeriesTranslationORM",
     "TagORM",
     "TagTranslationORM",
+    "UserDictionaryEntrieORM",
     "UserFavoriteORM",
     "UserORM",
     "VocabularyLevelORM",

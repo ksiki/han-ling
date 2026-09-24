@@ -9,6 +9,7 @@ from src.models.types.enums import (
     BookCreatorRoleEnum,
     BookProcessingStatusEnum,
     BookPublicationStatusEnum,
+    LearningStatusEnum,
     UserRoleEnum,
 )
 
@@ -42,6 +43,12 @@ book_publication_status_enum_type = ENUM(
     values_callable=lambda obj: [e.value for e in obj],
 )
 
+learning_status_enum_type = ENUM(
+    LearningStatusEnum,
+    name="learning_status_enum",
+    values_callable=lambda obj: [e.value for e in obj],
+)
+
 
 class ContentServiceBaseORM(BaseORM, ReprMixin):
     __abstract__ = True
@@ -52,4 +59,5 @@ class ContentServiceBaseORM(BaseORM, ReprMixin):
         BookCreatorRoleEnum: book_creator_role_enum_type,
         BookProcessingStatusEnum: book_processing_status_enum_type,
         BookPublicationStatusEnum: book_publication_status_enum_type,
+        LearningStatusEnum: learning_status_enum_type,
     }

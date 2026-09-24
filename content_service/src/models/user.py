@@ -1,8 +1,10 @@
 import datetime
+from typing import Any
 
 from shared.db.models import TimestampMixin
 from shared.db.types import uuid_pk
 from sqlalchemy import DateTime, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.models.types.types import user_role
@@ -27,7 +29,7 @@ class UserORM(ContentServiceBaseORM, TimestampMixin):
     )
 
     role: Mapped[user_role] = mapped_column(
-        comment="Уровень прав доступа пользователя (user / admin)"
+        comment="Уровень прав доступа пользователя (USER / ADMIN)"
     )
 
     subscribe_exp: Mapped[datetime.datetime | None] = mapped_column(
@@ -38,8 +40,19 @@ class UserORM(ContentServiceBaseORM, TimestampMixin):
         comment="Время окончания премиум-подписки (обновляется асинхронно через брокер сообщений Redis)",
     )
 
+    reader_settings: Mapped[dict[str, Any]] = mapped_column(
+        JSONB,
+        nullable=False,
+        server_default="{}",
+        default=dict,
+        comment="Настройки читалки в формате JSON (шрифт, размер текста, транскрипция, автовоспроизведение и т.д.)",
+    )
+
     @property
     def is_subscriber(self) -> bool:
+        """
+        Проверяет, активна ли премиум-подписка пользователя на текущий момент времени.
+        """
         return (
             self.subscribe_exp is not None
             and self.subscribe_exp > datetime.datetime.now(datetime.UTC)

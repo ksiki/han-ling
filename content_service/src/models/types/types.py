@@ -7,6 +7,7 @@ from .enums import (
     BookCreatorRoleEnum,
     BookProcessingStatusEnum,
     BookPublicationStatusEnum,
+    LearningStatusEnum,
     UserRoleEnum,
 )
 
@@ -18,6 +19,13 @@ book_character_role = Annotated[
 book_creator_role = Annotated[
     BookCreatorRoleEnum,
     mapped_column(),
+]
+
+learning_status = Annotated[
+    LearningStatusEnum,
+    mapped_column(
+        server_default=LearningStatusEnum.NEW, default=LearningStatusEnum.NEW
+    ),
 ]
 
 user_role = Annotated[

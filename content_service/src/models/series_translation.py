@@ -1,5 +1,6 @@
+import uuid
+
 from shared.db.models import TimestampMixin
-from shared.db.types import uuid_pk
 from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -14,7 +15,7 @@ class SeriesTranslationORM(ContentServiceBaseORM, TimestampMixin):
         },
     )
 
-    series_id: Mapped[uuid_pk] = mapped_column(
+    series_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("series.id", ondelete="CASCADE"),
         primary_key=True,
         comment="Ссылка на базовую серию",

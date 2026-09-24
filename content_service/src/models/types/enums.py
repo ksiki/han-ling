@@ -32,3 +32,10 @@ class BookPublicationStatusEnum(enum.Enum):
     COMING_SOON = "COMING_SOON"
     PUBLISHED = "PUBLISHED"
     HIDDEN = "HIDDEN"
+
+
+class LearningStatusEnum(enum.Enum):
+    NEW = "NEW"
+    LEARNING = "LEARNING"
+    REVIEWING = "REVIEWING"
+    MASTERED = "MASTERED"
